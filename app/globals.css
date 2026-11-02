@@ -1,0 +1,156 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #0d2b3e;
+  --color-sea: #17789f;
+  --color-mist: #edf3f6;
+  --color-line: #d5e0e6;
+  --color-taxi: #f2b01e;
+  --color-ok: #14804a;
+  --color-bad: #b83a2e;
+  --font-sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    "Noto Sans Arabic", sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--color-mist);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding: 0 1.1rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--color-ink);
+  color: #fff;
+}
+.btn-taxi {
+  background: var(--color-taxi);
+  color: var(--color-ink);
+}
+.btn-ghost {
+  background: #fff;
+  border: 1px solid var(--color-line);
+  color: var(--color-ink);
+}
+.btn-danger {
+  background: #fff;
+  border: 1px solid var(--color-bad);
+  color: var(--color-bad);
+}
+.btn-sm {
+  min-height: 38px;
+  padding: 0 0.8rem;
+  font-size: 0.875rem;
+}
+
+.field {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--color-line);
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 0 0.85rem;
+  color: var(--color-ink);
+}
+.field:focus-visible,
+.btn:focus-visible {
+  outline: 3px solid var(--color-sea);
+  outline-offset: 2px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--color-line);
+  border-radius: 1rem;
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #4a6577;
+}
+
+.chip {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--color-mist);
+  color: var(--color-ink);
+}
+.chip-ok {
+  background: #dff3e8;
+  color: var(--color-ok);
+}
+.chip-warn {
+  background: #fdf0cf;
+  color: #7a5600;
+}
+.chip-bad {
+  background: #f8dedb;
+  color: var(--color-bad);
+}
+
+/* Marqueurs de la carte */
+.tx-pin {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-taxi);
+  color: var(--color-ink);
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(13, 43, 62, 0.35);
+}
+.tx-pin--on {
+  background: var(--color-ink);
+  color: var(--color-taxi);
+  transform: scale(1.2);
+}
+.tx-user {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.25);
+}
+.tx-dest {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--color-bad);
+  border: 3px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transform: rotate(45deg);
+}
