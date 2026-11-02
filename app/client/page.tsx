@@ -1,7 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Avatar } from "@/components/Avatar";
+import { CheckIcon, ChevronIcon, PhoneIcon, PinIcon } from "@/components/Icons";
 import { TopBar } from "@/components/TopBar";
 import { useT } from "@/components/LangProvider";
 import { useApp } from "@/lib/useApp";
@@ -17,6 +19,7 @@ const TaxiMap = dynamic(() => import("@/components/TaxiMap"), {
 });
 
 const tel = (p: string) => `tel:${p.replace(/\s/g, "")}`;
+const plain = (p: LatLng): LatLng => ({ lat: p.lat, lng: p.lng });
 
 export default function ClientPage() {
   const { t } = useT();
@@ -33,6 +36,9 @@ export default function ClientPage() {
   const [rideId, setRideId] = useState<string | null>(null);
   const [formError, setFormError] = useState(false);
 
+  const sheetRef = useRef<HTMLElement>(null);
+  const [sheetH, setSheetH] = useState(320);
+
   useEffect(() => {
     try {
       setName(localStorage.getItem("samafal:cname") ?? "");
@@ -41,6 +47,16 @@ export default function ClientPage() {
     } catch {
       /* stockage indisponible */
     }
+  }, []);
+
+  useEffect(() => {
+    const el = sheetRef.current;
+    if (!el) return;
+    const update = () => setSheetH(el.offsetHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   function saveRideId(id: string | null) {
@@ -73,6 +89,7 @@ export default function ClientPage() {
   const ride = rideId ? app.rides.find((r) => r.id === rideId) : undefined;
   const rideActive = ride !== undefined && ride.status !== "cancelled";
   const rideDriver = ride ? app.drivers.find((d) => d.id === ride.driverId) : undefined;
+  const showRide = rideActive && ride !== undefined && rideDriver !== undefined;
 
   function locate() {
     if (!("geolocation" in navigator)) {
@@ -117,29 +134,47 @@ export default function ClientPage() {
   }
 
   const mapDrivers =
-    rideActive && rideDriver
+    showRide && rideDriver
       ? [{ id: rideDriver.id, lat: rideDriver.lat, lng: rideDriver.lng, label: rideDriver.name, selected: true }]
       : nearby.map((n) => ({ id: n.d.id, lat: n.d.lat, lng: n.d.lng, label: n.d.name, selected: n.d.id === sel?.d.id }));
 
-  const mapUser: LatLng = rideActive && ride ? ride.pickup : pos;
-  const mapDest = zoneCoords(rideActive && ride ? ride.destZone : destId);
+  const startPt: LatLng = showRide && ride ? ride.pickup : pos;
+  const destPt = zoneCoords(showRide && ride ? ride.destZone : destId);
+  const focusDriver = showRide && rideDriver ? rideDriver : sel?.d;
+  const focus: LatLng[] = [plain(startPt), plain(destPt), ...(focusDriver ? [plain(focusDriver)] : [])];
 
   return (
-    <div className="flex h-dvh flex-col">
-      <TopBar title={t("client_title")} />
-      <div className="relative h-[38dvh] shrink-0 border-b border-line">
-        <TaxiMap center={mapUser} user={mapUser} dest={mapDest} drivers={mapDrivers} onSelect={rideActive ? undefined : setSelectedId} />
+    <div className="relative h-dvh overflow-hidden">
+      <div className="absolute inset-0 isolate">
+        <TaxiMap
+          focus={focus}
+          user={startPt}
+          dest={destPt}
+          drivers={mapDrivers}
+          onSelect={showRide ? undefined : setSelectedId}
+          bottomPad={sheetH}
+        />
       </div>
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto grid max-w-xl gap-4 p-4">
-          {rideActive && ride && rideDriver ? (
-            <RidePanel ride={ride} driver={rideDriver} onDone={() => saveRideId(null)} />
-          ) : (
-            <>
-              <section className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="label" htmlFor="pickup">{t("pickup")}</label>
+      <div className="absolute inset-x-0 top-0 z-20">
+        <TopBar title={t("client_title")} />
+      </div>
+
+      <main
+        ref={sheetRef}
+        className="absolute inset-x-0 bottom-0 z-20 mx-auto max-h-[66dvh] max-w-xl overflow-y-auto rounded-t-3xl bg-white shadow-[0_-8px_30px_rgba(11,46,34,0.22)]"
+      >
+        <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-line" aria-hidden="true" />
+
+        {showRide && ride && rideDriver ? (
+          <RidePanel ride={ride} driver={rideDriver} onDone={() => saveRideId(null)} />
+        ) : (
+          <>
+            <div className="grid gap-4 p-4">
+              <section className="grid gap-2" aria-label={t("pickup")}>
+                <div className="flex items-center gap-3">
+                  <span className="h-3 w-3 shrink-0 rounded-full bg-[#2563eb] ring-4 ring-[#2563eb]/20" aria-hidden="true" />
+                  <label htmlFor="pickup" className="sr-only">{t("pickup")}</label>
                   <select
                     id="pickup"
                     className="field"
@@ -152,24 +187,26 @@ export default function ClientPage() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="label" htmlFor="dest">{t("destination")}</label>
+                <div className="flex items-center gap-3">
+                  <span className="h-3 w-3 shrink-0 rotate-45 rounded-[2px] bg-bad" aria-hidden="true" />
+                  <label htmlFor="dest" className="sr-only">{t("destination")}</label>
                   <select id="dest" className="field" value={destId} onChange={(e) => setDestId(e.target.value as ZoneId)}>
                     {ZONES.map((z) => (
                       <option key={z.id} value={z.id}>{t(`zone_${z.id}`)}</option>
                     ))}
                   </select>
                 </div>
-                <button type="button" onClick={locate} className="btn btn-ghost btn-sm col-span-2">
+                <button type="button" onClick={locate} className="btn btn-ghost btn-sm w-fit">
+                  <PinIcon className="h-4 w-4" />
                   {t("use_gps")}
                 </button>
-                {gpsError && <p className="col-span-2 text-sm text-bad">{t("gps_error")}</p>}
+                {gpsError && <p className="text-sm text-bad">{t("gps_error")}</p>}
               </section>
 
               <section>
-                <h2 className="mb-2 text-sm font-semibold">{t("taxis_nearby")}</h2>
+                <h2 className="mb-2 text-sm font-bold">{t("taxis_nearby")}</h2>
                 {nearby.length === 0 ? (
-                  <p className="card p-4 text-sm">{t("no_taxi")}</p>
+                  <p className="rounded-2xl bg-mist p-4 text-sm">{t("no_taxi")}</p>
                 ) : (
                   <ul className="grid gap-2">
                     {nearby.slice(0, 6).map(({ d, km }) => {
@@ -180,19 +217,26 @@ export default function ClientPage() {
                             type="button"
                             onClick={() => setSelectedId(d.id)}
                             aria-pressed={on}
-                            className={`card flex w-full items-center justify-between gap-3 p-3 text-start ${on ? "border-ink ring-2 ring-ink" : ""}`}
+                            className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-start transition ${
+                              on ? "border-green bg-green-soft ring-2 ring-green" : "border-line bg-white"
+                            }`}
                           >
-                            <span className="min-w-0">
+                            <Avatar name={d.name} />
+                            <span className="min-w-0 flex-1">
                               <span className="block truncate font-semibold">{d.name}</span>
                               <span className="block truncate text-sm text-ink/70" dir="ltr">
                                 {d.vehicle} · {d.plate}
                               </span>
-                            </span>
-                            <span className="shrink-0 text-end text-sm">
-                              <span className="chip chip-ok">{t("verified")}</span>
-                              <span className="mt-1 block text-ink/70">
-                                {t("away", { km: km.toFixed(1), min: etaMin(km) })}
+                              <span className="flex items-center gap-1 text-xs font-semibold text-green-dark">
+                                <CheckIcon className="h-3.5 w-3.5" />
+                                {t("verified")}
                               </span>
+                            </span>
+                            <span className="shrink-0 text-end">
+                              <span className="block text-xl font-bold leading-none tabular-nums" dir="ltr">
+                                {etaMin(km)} min
+                              </span>
+                              <span className="mt-1 block text-xs text-ink/60" dir="ltr">{km.toFixed(1)} km</span>
                             </span>
                           </button>
                         </li>
@@ -203,32 +247,27 @@ export default function ClientPage() {
               </section>
 
               {sel && (
-                <section className="card grid gap-4 p-4">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="text-sm text-ink/70">{t("fixed_price")}</span>
-                    <span className="text-2xl font-bold">
-                      {fmtNum(price)} <span className="text-base font-semibold">{t("currency")}</span>
-                    </span>
-                  </div>
-
-                  <div>
+                <>
+                  <section aria-label={t("pay_method")}>
                     <span className="label">{t("pay_method")}</span>
-                    <div className="grid grid-cols-2 gap-2" role="group" aria-label={t("pay_method")}>
+                    <div className="grid grid-cols-2 gap-2" role="group">
                       {(["cash", "mobile"] as Payment[]).map((p) => (
                         <button
                           key={p}
                           type="button"
                           aria-pressed={payment === p}
                           onClick={() => setPayment(p)}
-                          className={`btn btn-sm ${payment === p ? "btn-primary" : "btn-ghost"}`}
+                          className={`btn btn-sm border ${
+                            payment === p ? "border-green bg-green-soft text-green-dark ring-2 ring-green" : "border-line bg-white"
+                          }`}
                         >
                           {t(p === "cash" ? "pay_cash" : "pay_mobile")}
                         </button>
                       ))}
                     </div>
-                  </div>
+                  </section>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <section className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="label" htmlFor="cname">{t("your_name")}</label>
                       <input id="cname" className="field" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
@@ -237,24 +276,45 @@ export default function ClientPage() {
                       <label className="label" htmlFor="cphone">{t("your_phone")}</label>
                       <input id="cphone" className="field" value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" autoComplete="tel" dir="ltr" />
                     </div>
-                  </div>
-                  {formError && <p className="text-sm text-bad">{t("form_error")}</p>}
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <button type="button" className="btn btn-taxi" onClick={reserve}>
-                      {t("book")}
-                    </button>
-                    <a className="btn btn-ghost" href={tel(sel.d.phone)}>
-                      {t("call")}
-                    </a>
-                  </div>
-                </section>
+                    {formError && <p className="col-span-2 text-sm text-bad">{t("form_error")}</p>}
+                  </section>
+                </>
               )}
-            </>
-          )}
-        </div>
+            </div>
+
+            {sel && (
+              <div className="sticky bottom-0 flex gap-3 border-t border-line bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                <a className="btn btn-ghost" href={tel(sel.d.phone)} aria-label={`${t("call")} ${sel.d.name}`}>
+                  <PhoneIcon className="h-5 w-5" />
+                </a>
+                <button type="button" className="btn btn-taxi flex-1 justify-between" onClick={reserve}>
+                  <span>{t("book")}</span>
+                  <span className="tabular-nums">{fmtNum(price)} {t("currency")}</span>
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </main>
     </div>
+  );
+}
+
+function Tracker({ status }: { status: Ride["status"] }) {
+  const { t } = useT();
+  const steps = ["requested", "accepted", "completed"] as const;
+  const idx = status === "completed" ? 2 : status === "accepted" ? 1 : 0;
+  return (
+    <ol className="grid grid-cols-3 gap-2">
+      {steps.map((s, i) => (
+        <li key={s} className="grid gap-1">
+          <span className={`h-1.5 rounded-full ${i <= idx ? "bg-green" : "bg-line"}`} />
+          <span className={`text-xs font-semibold ${i <= idx ? "text-green-dark" : "text-ink/50"}`}>
+            {t(`ride_${s}`)}
+          </span>
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -262,82 +322,108 @@ function RidePanel({ ride, driver, onDone }: { ride: Ride; driver: Driver; onDon
   const { t } = useT();
   const priceTxt = fmtNum(ride.price);
 
-  const call = (
-    <a className="btn btn-ghost" href={tel(driver.phone)}>
-      {t("call")} {driver.name}
-    </a>
+  const header = (
+    <div className="flex items-center gap-3">
+      <Avatar name={driver.name} size={48} />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-lg font-bold">{driver.name}</p>
+        <p className="truncate text-sm text-ink/70" dir="ltr">{driver.vehicle} · {driver.plate}</p>
+      </div>
+      <a className="btn btn-ghost btn-sm shrink-0" href={tel(driver.phone)} aria-label={`${t("call")} ${driver.name}`}>
+        <PhoneIcon className="h-4 w-4" />
+        {t("call")}
+      </a>
+    </div>
+  );
+
+  const trip = (
+    <p className="flex flex-wrap items-center gap-x-2 rounded-2xl bg-mist p-3 text-sm">
+      <strong>{t(`zone_${ride.pickupZone}`)}</strong>
+      <ChevronIcon className="h-4 w-4 text-ink/50 rtl:-scale-x-100" />
+      <strong>{t(`zone_${ride.destZone}`)}</strong>
+      <span className="ms-auto font-bold tabular-nums">{priceTxt} {t("currency")}</span>
+    </p>
+  );
+
+  const cancel = (
+    <button
+      type="button"
+      className="btn btn-danger"
+      onClick={() => {
+        setRideStatus(ride.id, "cancelled");
+        onDone();
+      }}
+    >
+      {t("cancel_request")}
+    </button>
   );
 
   if (ride.status === "requested") {
     return (
-      <section className="card grid gap-3 p-4">
-        <h2 className="text-lg font-semibold">{t("waiting_title", { name: driver.name })}</h2>
-        <p className="text-sm text-ink/70">{t("waiting_sub")}</p>
-        {call}
-        <button
-          type="button"
-          className="btn btn-danger"
-          onClick={() => {
-            setRideStatus(ride.id, "cancelled");
-            onDone();
-          }}
-        >
-          {t("cancel_request")}
-        </button>
-      </section>
+      <div className="grid gap-4 p-4">
+        <Tracker status={ride.status} />
+        {header}
+        <div>
+          <h2 className="text-lg font-bold">{t("waiting_title", { name: driver.name })}</h2>
+          <p className="text-sm text-ink/70">{t("waiting_sub")}</p>
+        </div>
+        {trip}
+        {cancel}
+      </div>
     );
   }
 
   if (ride.status === "accepted") {
     const eta = etaMin(roadKm(driver, ride.pickup));
     return (
-      <section className="card grid gap-3 p-4">
-        <h2 className="text-lg font-semibold">{t("accepted_title", { name: driver.name })}</h2>
-        <p className="text-sm text-ink/70" dir="auto">
-          {t("accepted_sub", { min: eta, vehicle: driver.vehicle, plate: driver.plate })}
-        </p>
-        <p className="text-sm">
-          {t("fixed_price")} : <strong>{priceTxt} {t("currency")}</strong> · {t(ride.payment === "cash" ? "pay_cash" : "pay_mobile")}
-        </p>
-        {call}
-        <button
-          type="button"
-          className="btn btn-danger"
-          onClick={() => {
-            setRideStatus(ride.id, "cancelled");
-            onDone();
-          }}
-        >
-          {t("cancel_request")}
-        </button>
-      </section>
+      <div className="grid gap-4 p-4">
+        <Tracker status={ride.status} />
+        {header}
+        <div>
+          <h2 className="text-lg font-bold">{t("accepted_title", { name: driver.name })}</h2>
+          <p className="text-sm text-ink/70" dir="auto">
+            {t("accepted_sub", { min: eta, vehicle: driver.vehicle, plate: driver.plate })}
+          </p>
+        </div>
+        {trip}
+        <p className="text-sm text-ink/70">{t(ride.payment === "cash" ? "pay_cash" : "pay_mobile")}</p>
+        {cancel}
+      </div>
     );
   }
 
   if (ride.status === "declined") {
     return (
-      <section className="card grid gap-3 p-4">
-        <h2 className="text-lg font-semibold">{t("declined_title", { name: driver.name })}</h2>
-        <p className="text-sm text-ink/70">{t("declined_sub")}</p>
+      <div className="grid gap-4 p-4">
+        {header}
+        <div>
+          <h2 className="text-lg font-bold">{t("declined_title", { name: driver.name })}</h2>
+          <p className="text-sm text-ink/70">{t("declined_sub")}</p>
+        </div>
         <button type="button" className="btn btn-taxi" onClick={onDone}>
           {t("choose_other")}
         </button>
-      </section>
+      </div>
     );
   }
 
-  // completed
+  // terminée
   const confirmed = ride.payStatus === "confirmed";
   return (
-    <section className="card grid gap-3 p-4">
-      <h2 className="text-lg font-semibold">{t("done_title")}</h2>
+    <div className="grid gap-4 p-4">
+      <Tracker status={ride.status} />
+      {header}
+      <h2 className="text-lg font-bold">{t("done_title")}</h2>
+      {trip}
       {ride.payment === "cash" ? (
-        <p>{t("pay_cash_note", { price: priceTxt, cur: t("currency") })}</p>
+        <p className="rounded-2xl bg-green-soft p-3 font-semibold text-green-dark">
+          {t("pay_cash_note", { price: priceTxt, cur: t("currency") })}
+        </p>
       ) : confirmed ? (
-        <p className="font-semibold text-ok">{t("paid_confirmed")}</p>
+        <p className="rounded-2xl bg-green-soft p-3 font-semibold text-green-dark">{t("paid_confirmed")}</p>
       ) : (
         <>
-          <p>
+          <p className="rounded-2xl bg-green-soft p-3 font-semibold text-green-dark">
             {t("pay_mobile_note", {
               price: priceTxt,
               cur: t("currency"),
@@ -357,6 +443,6 @@ function RidePanel({ ride, driver, onDone }: { ride: Ride; driver: Driver; onDon
       <button type="button" className="btn btn-primary" onClick={onDone}>
         {t("new_ride")}
       </button>
-    </section>
+    </div>
   );
 }

@@ -16,6 +16,11 @@ export const so: Record<Key, string> = {
   language: "Luuqad",
   currency: "FDJ",
   loading: "Waa la soo rarayaa…",
+  online_count: "{n} taksi oo online ah",
+  search: "Raadi",
+  filter_all: "Dhammaan",
+  state_online: "Online",
+  state_offline: "Offline",
 
   zone_centre: "Badhtamaha magaalada",
   zone_serpent: "Plateau du Serpent",

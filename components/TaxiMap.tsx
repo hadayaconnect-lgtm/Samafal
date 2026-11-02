@@ -8,26 +8,33 @@ import type { LatLng } from "@/lib/geo";
 export type MapDriver = { id: string; lat: number; lng: number; label: string; selected?: boolean };
 
 type Props = {
-  center: LatLng;
+  /** Points à garder visibles (départ, destination, taxi choisi). */
+  focus: LatLng[];
   user?: LatLng | null;
   dest?: LatLng | null;
   drivers: MapDriver[];
   onSelect?: (id: string) => void;
+  /** Hauteur (en px) masquée en bas par la feuille de réservation. */
+  bottomPad?: number;
 };
 
 const CAR_SVG =
-  '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11v6h-2v-1.5H7V17H5v-6z" fill="currentColor"/><circle cx="8" cy="13.4" r="1.2" fill="#fff"/><circle cx="16" cy="13.4" r="1.2" fill="#fff"/></svg>';
+  '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11v6h-2v-1.5H7V17H5v-6z" fill="currentColor"/><circle cx="8" cy="13.4" r="1.2" fill="#0f7a43"/><circle cx="16" cy="13.4" r="1.2" fill="#0f7a43"/></svg>';
 
-export default function TaxiMap({ center, user, dest, drivers, onSelect }: Props) {
+export default function TaxiMap({ focus, user, dest, drivers, onSelect, bottomPad = 0 }: Props) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layer = useRef<L.LayerGroup | null>(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
 
+  const first = focus[0] ?? { lat: 11.5886, lng: 43.145 };
+  const focusKey = JSON.stringify(focus.map((p) => [Number(p.lat.toFixed(5)), Number(p.lng.toFixed(5))]));
+  const pad = Math.round(bottomPad / 40) * 40;
+
   useEffect(() => {
     if (!el.current || map.current) return;
-    const m = L.map(el.current, { zoomControl: false }).setView([center.lat, center.lng], 14);
+    const m = L.map(el.current, { zoomControl: false }).setView([first.lat, first.lng], 14);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution: "© OpenStreetMap",
@@ -44,8 +51,17 @@ export default function TaxiMap({ center, user, dest, drivers, onSelect }: Props
   }, []);
 
   useEffect(() => {
-    map.current?.setView([center.lat, center.lng], map.current.getZoom());
-  }, [center.lat, center.lng]);
+    const m = map.current;
+    if (!m || focus.length === 0) return;
+    const bounds = L.latLngBounds(focus.map((p) => [p.lat, p.lng] as [number, number]));
+    m.fitBounds(bounds, {
+      paddingTopLeft: [28, 76],
+      paddingBottomRight: [28, pad + 24],
+      maxZoom: 15,
+      animate: true,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusKey, pad]);
 
   useEffect(() => {
     const g = layer.current;
@@ -72,6 +88,7 @@ export default function TaxiMap({ center, user, dest, drivers, onSelect }: Props
           iconAnchor: [17, 17],
         }),
         keyboard: false,
+        zIndexOffset: d.selected ? 1000 : 0,
       });
       marker.bindTooltip(d.label, { direction: "top", offset: [0, -14] });
       marker.on("click", () => onSelectRef.current?.(d.id));

@@ -14,6 +14,11 @@ export const fr = {
   language: "Langue",
   currency: "FDJ",
   loading: "Chargement…",
+  online_count: "{n} taxis en ligne",
+  search: "Rechercher",
+  filter_all: "Tous",
+  state_online: "En ligne",
+  state_offline: "Hors ligne",
 
   zone_centre: "Centre-ville",
   zone_serpent: "Plateau du Serpent",

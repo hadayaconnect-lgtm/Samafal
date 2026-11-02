@@ -16,6 +16,11 @@ export const ar: Record<Key, string> = {
   language: "اللغة",
   currency: "فرنك",
   loading: "جارٍ التحميل…",
+  online_count: "{n} سيارة أجرة متصلة",
+  search: "بحث",
+  filter_all: "الكل",
+  state_online: "متصل",
+  state_offline: "غير متصل",
 
   zone_centre: "وسط المدينة",
   zone_serpent: "هضبة الأفعى",

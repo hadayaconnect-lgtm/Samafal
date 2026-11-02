@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { LANGS, type Lang } from "@/lib/i18n";
+import { LogoMark } from "./Logo";
 import { useT } from "./LangProvider";
 
 export function LangSwitcher() {
@@ -23,16 +24,15 @@ export function LangSwitcher() {
   );
 }
 
-export function TopBar({ title, home = false, right }: { title: string; home?: boolean; right?: ReactNode }) {
+export function TopBar({ title, right }: { title: string; right?: ReactNode }) {
   const { t } = useT();
   return (
-    <header className="flex items-center justify-between gap-3 bg-ink px-4 py-3 text-white">
+    <header className="flex items-center justify-between gap-3 bg-ink px-4 py-2.5 text-white">
       <div className="flex min-w-0 items-center gap-3">
-        {!home && (
-          <Link href="/" aria-label={t("back")} className="text-xl leading-none text-white/70 hover:text-white rtl:-scale-x-100">
-            ‹
-          </Link>
-        )}
+        <Link href="/" aria-label={t("back")} className="flex items-center gap-2 text-white/80 hover:text-white">
+          <span className="text-xl leading-none rtl:-scale-x-100">‹</span>
+          <LogoMark size={28} />
+        </Link>
         <h1 className="truncate text-base font-semibold">{title}</h1>
       </div>
       <div className="flex items-center gap-2">
