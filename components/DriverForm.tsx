@@ -14,10 +14,12 @@ const EMPTY: NewDriver = {
   walletNumber: "",
 };
 
-export function DriverForm({ submitKey, onSubmit }: { submitKey: Key; onSubmit: (d: NewDriver) => void }) {
+export function DriverForm({ submitKey, onSubmit }: { submitKey: Key; onSubmit: (d: NewDriver) => Promise<void> | void }) {
   const { t } = useT();
   const uid = useId();
   const [f, setF] = useState<NewDriver>(EMPTY);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(false);
 
   const set = (k: keyof NewDriver) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setF((p) => ({ ...p, [k]: e.target.value }));
@@ -27,18 +29,25 @@ export function DriverForm({ submitKey, onSubmit }: { submitKey: Key; onSubmit: 
   return (
     <form
       className="grid gap-3"
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
         if (!ok) return;
-        onSubmit({
+        setBusy(true);
+        setError(false);
+        try {
+          await onSubmit({
           name: f.name.trim(),
           phone: f.phone.trim(),
           plate: f.plate.trim(),
           vehicle: f.vehicle.trim(),
           walletOperator: f.walletOperator,
           walletNumber: f.walletNumber.trim(),
-        });
-        setF(EMPTY);
+          });
+          setF(EMPTY);
+        } catch {
+          setError(true);
+        }
+        setBusy(false);
       }}
     >
       <div>
@@ -72,7 +81,8 @@ export function DriverForm({ submitKey, onSubmit }: { submitKey: Key; onSubmit: 
           <input id={`${uid}-wn`} className="field" value={f.walletNumber} onChange={set("walletNumber")} inputMode="tel" dir="ltr" />
         </div>
       </div>
-      <button type="submit" className="btn btn-primary" disabled={!ok}>
+      {error && <p className="text-sm text-bad">{t("register_error")}</p>}
+      <button type="submit" className="btn btn-primary" disabled={!ok || busy}>
         {t(submitKey)}
       </button>
     </form>

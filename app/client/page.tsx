@@ -6,7 +6,8 @@ import { Avatar } from "@/components/Avatar";
 import { CheckIcon, ChevronIcon, PhoneIcon, PinIcon } from "@/components/Icons";
 import { TopBar } from "@/components/TopBar";
 import { useT } from "@/components/LangProvider";
-import { useApp } from "@/lib/useApp";
+import { AuthGate } from "@/components/AuthGate";
+import { useAct, useApp } from "@/lib/useApp";
 import { claimPaid, requestRide, setRideStatus } from "@/lib/store";
 import { ZONES, nearestZone, zoneCoords, type ZoneId } from "@/lib/zones";
 import { etaMin, roadKm, type LatLng } from "@/lib/geo";
@@ -23,7 +24,17 @@ const plain = (p: LatLng): LatLng => ({ lat: p.lat, lng: p.lng });
 
 export default function ClientPage() {
   const { t } = useT();
+  return (
+    <AuthGate title={t("client_title")} fullScreen>
+      {() => <Client />}
+    </AuthGate>
+  );
+}
+
+function Client() {
+  const { t } = useT();
   const app = useApp();
+  const act = useAct();
 
   const [gps, setGps] = useState<LatLng | null>(null);
   const [gpsError, setGpsError] = useState(false);
@@ -31,18 +42,13 @@ export default function ClientPage() {
   const [destId, setDestId] = useState<ZoneId>("aeroport");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [payment, setPayment] = useState<Payment>("cash");
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
   const [rideId, setRideId] = useState<string | null>(null);
-  const [formError, setFormError] = useState(false);
 
   const sheetRef = useRef<HTMLElement>(null);
   const [sheetH, setSheetH] = useState(320);
 
   useEffect(() => {
     try {
-      setName(localStorage.getItem("samafal:cname") ?? "");
-      setPhone(localStorage.getItem("samafal:cphone") ?? "");
       setRideId(localStorage.getItem("samafal:cride"));
     } catch {
       /* stockage indisponible */
@@ -109,28 +115,15 @@ export default function ClientPage() {
 
   function reserve() {
     if (!sel) return;
-    if (name.trim().length < 2 || phone.trim().length < 6) {
-      setFormError(true);
-      return;
-    }
-    setFormError(false);
-    try {
-      localStorage.setItem("samafal:cname", name.trim());
-      localStorage.setItem("samafal:cphone", phone.trim());
-    } catch {
-      /* stockage indisponible */
-    }
-    const id = requestRide({
-      driverId: sel.d.id,
-      clientName: name.trim(),
-      clientPhone: phone.trim(),
-      pickup: { lat: pos.lat, lng: pos.lng, gps: usingGps },
-      pickupZone,
-      destZone: destId,
-      price,
-      payment,
-    });
-    saveRideId(id);
+    act(
+      requestRide({
+        driverId: sel.d.id,
+        pickup: { lat: pos.lat, lng: pos.lng },
+        pickupZone,
+        destZone: destId,
+        payment,
+      }).then(saveRideId),
+    );
   }
 
   const mapDrivers =
@@ -267,17 +260,6 @@ export default function ClientPage() {
                     </div>
                   </section>
 
-                  <section className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="label" htmlFor="cname">{t("your_name")}</label>
-                      <input id="cname" className="field" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
-                    </div>
-                    <div>
-                      <label className="label" htmlFor="cphone">{t("your_phone")}</label>
-                      <input id="cphone" className="field" value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" autoComplete="tel" dir="ltr" />
-                    </div>
-                    {formError && <p className="col-span-2 text-sm text-bad">{t("form_error")}</p>}
-                  </section>
                 </>
               )}
             </div>
@@ -320,6 +302,7 @@ function Tracker({ status }: { status: Ride["status"] }) {
 
 function RidePanel({ ride, driver, onDone }: { ride: Ride; driver: Driver; onDone: () => void }) {
   const { t } = useT();
+  const act = useAct();
   const priceTxt = fmtNum(ride.price);
 
   const header = (
@@ -350,7 +333,7 @@ function RidePanel({ ride, driver, onDone }: { ride: Ride; driver: Driver; onDon
       type="button"
       className="btn btn-danger"
       onClick={() => {
-        setRideStatus(ride.id, "cancelled");
+        act(setRideStatus(ride.id, "cancelled"));
         onDone();
       }}
     >
@@ -432,7 +415,7 @@ function RidePanel({ ride, driver, onDone }: { ride: Ride; driver: Driver; onDon
             })}
           </p>
           {ride.payStatus === "pending" ? (
-            <button type="button" className="btn btn-taxi" onClick={() => claimPaid(ride.id)}>
+            <button type="button" className="btn btn-taxi" onClick={() => act(claimPaid(ride.id))}>
               {t("i_paid")}
             </button>
           ) : (

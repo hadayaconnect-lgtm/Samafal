@@ -5,7 +5,6 @@ import type { ComponentType } from "react";
 import { ChevronIcon, PinIcon, ShieldIcon, WheelIcon } from "@/components/Icons";
 import { LangSwitcher } from "@/components/TopBar";
 import { LogoMark } from "@/components/Logo";
-import { ResetDemo } from "@/components/ResetDemo";
 import { useT } from "@/components/LangProvider";
 import { useApp } from "@/lib/useApp";
 import type { Key } from "@/lib/i18n";
@@ -42,10 +41,12 @@ export default function Home() {
           </div>
           <div className="grid gap-4">
             <p className="text-3xl font-bold leading-tight text-balance">{t("tagline")}</p>
+            {app.ready && (
             <p className="inline-flex w-fit items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm">
-              <span className="h-2.5 w-2.5 rounded-full bg-taxi" aria-hidden="true" />
-              {t("online_count", { n: online })}
-            </p>
+                <span className="h-2.5 w-2.5 rounded-full bg-taxi" aria-hidden="true" />
+                {t("online_count", { n: online })}
+              </p>
+            )}
           </div>
         </div>
       </header>
@@ -77,8 +78,7 @@ export default function Home() {
         </nav>
 
         <div className="mt-auto grid gap-3 pt-6 text-sm text-ink/70">
-          <p>{t("demo_note")}</p>
-          <ResetDemo />
+          <p>{t("live_note")}</p>
         </div>
       </main>
     </div>

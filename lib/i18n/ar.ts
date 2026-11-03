@@ -1,7 +1,7 @@
 import type { Key } from "./fr";
 
 /** Arabe : traduction à faire relire par un locuteur natif avant le lancement. */
-export const ar: Record<Key, string> = {
+export const ar: Partial<Record<Key, string>> = {
   app_name: "سمفل",
   tagline: "أقرب تاكسي إليك في لحظات.",
   home_client: "أبحث عن تاكسي",
@@ -128,4 +128,17 @@ export const ar: Record<Key, string> = {
   ride_completed: "منتهية",
   ride_declined: "مرفوضة",
   ride_cancelled: "ملغاة",
+  auth_phone_title: "تسجيل الدخول",
+  auth_phone_label: "رقم هاتفك",
+  auth_phone_hint: "رقم جيبوتي (8 أرقام). سيصلك رمز عبر رسالة نصية.",
+  auth_bad_phone: "رقم غير صالح.",
+  auth_send_code: "استلام الرمز",
+  auth_code_label: "الرمز المرسل بالرسالة",
+  auth_verify: "تأكيد",
+  auth_wrong_code: "الرمز خاطئ أو منتهي.",
+  auth_change_number: "تغيير الرقم",
+  auth_name_title: "ما اسمك؟",
+  auth_name_save: "حفظ",
+  auth_error: "حدث خطأ. حاول مرة أخرى.",
+  auth_logout: "تسجيل الخروج",
 };

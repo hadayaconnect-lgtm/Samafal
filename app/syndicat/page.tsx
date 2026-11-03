@@ -1,19 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Avatar } from "@/components/Avatar";
-import { DriverForm } from "@/components/DriverForm";
+import { AuthGate } from "@/components/AuthGate";
 import { ChevronIcon } from "@/components/Icons";
 import { useT } from "@/components/LangProvider";
 import { TopBar } from "@/components/TopBar";
-import { addDriver, patchDriver } from "@/lib/store";
-import { useApp } from "@/lib/useApp";
+import { signOut } from "@/lib/auth";
+import { setDriverStatus } from "@/lib/store";
+import { useAct, useApp } from "@/lib/useApp";
 import { fmtNum, zonePrice, ZONE_IDS } from "@/lib/pricing";
 import type { RideStatus } from "@/lib/types";
 
-/** Code de démonstration. À remplacer par une vraie authentification (Supabase) avant la mise en service. */
-const DEMO_PIN = "1234";
-const SESSION_KEY = "samafal:union";
 const isToday = (ts: number) => new Date(ts).toDateString() === new Date().toDateString();
 
 const STATUS_KEY = {
@@ -28,90 +26,31 @@ type Filter = "all" | "pending" | "online" | "suspended";
 
 export default function SyndicatPage() {
   const { t } = useT();
-  const [ok, setOk] = useState<boolean | undefined>(undefined);
-  const [pin, setPin] = useState("");
-  const [wrong, setWrong] = useState(false);
-
-  useEffect(() => {
-    try {
-      setOk(sessionStorage.getItem(SESSION_KEY) === "1");
-    } catch {
-      setOk(false);
-    }
-  }, []);
-
-  function enter() {
-    if (pin === DEMO_PIN) {
-      try {
-        sessionStorage.setItem(SESSION_KEY, "1");
-      } catch {
-        /* stockage indisponible */
-      }
-      setOk(true);
-      setWrong(false);
-    } else {
-      setWrong(true);
-    }
-  }
-
-  function leave() {
-    try {
-      sessionStorage.removeItem(SESSION_KEY);
-    } catch {
-      /* stockage indisponible */
-    }
-    setOk(false);
-    setPin("");
-  }
-
   return (
-    <div className="min-h-dvh">
-      <TopBar
-        title={t("union_title")}
-        right={
-          ok ? (
-            <button type="button" onClick={leave} className="rounded-lg border border-white/25 px-2 py-1.5 text-sm text-white">
-              {t("logout_union")}
-            </button>
-          ) : undefined
-        }
-      />
-      <main className="mx-auto grid max-w-3xl gap-5 p-4">
-        {ok === undefined ? (
-          <p>{t("loading")}</p>
-        ) : ok ? (
-          <Dashboard />
-        ) : (
-          <form
-            className="card mx-auto mt-6 grid w-full max-w-sm gap-3 p-5"
-            onSubmit={(e) => {
-              e.preventDefault();
-              enter();
-            }}
-          >
-            <label className="label" htmlFor="pin">{t("pin")}</label>
-            <input
-              id="pin"
-              className="field"
-              type="password"
-              inputMode="numeric"
-              autoComplete="off"
-              value={pin}
-              onChange={(e) => setPin(e.target.value)}
-              dir="ltr"
-            />
-            {wrong && <p className="text-sm text-bad">{t("pin_wrong")}</p>}
-            <button type="submit" className="btn btn-primary">{t("enter")}</button>
-          </form>
-        )}
-      </main>
-    </div>
+    <AuthGate title={t("union_title")} role="union">
+      {() => (
+        <div className="min-h-dvh">
+          <TopBar
+            title={t("union_title")}
+            right={
+              <button type="button" onClick={() => void signOut()} className="rounded-lg border border-white/25 px-2 py-1.5 text-sm text-white">
+                {t("logout_union")}
+              </button>
+            }
+          />
+          <main className="mx-auto grid max-w-3xl gap-5 p-4">
+            <Dashboard />
+          </main>
+        </div>
+      )}
+    </AuthGate>
   );
 }
 
 function Dashboard() {
   const { t } = useT();
   const app = useApp();
+  const act = useAct();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
 
@@ -229,14 +168,14 @@ function Dashboard() {
                 <button
                   type="button"
                   className={`btn btn-sm ${d.verified ? "btn-ghost" : "btn-primary"}`}
-                  onClick={() => patchDriver(d.id, { verified: !d.verified, available: d.verified ? false : d.available })}
+                  onClick={() => act(setDriverStatus(d.id, d.verified ? "pending" : "verified"))}
                 >
                   {t(d.verified ? "unvalidate" : "validate")}
                 </button>
                 <button
                   type="button"
                   className="btn btn-danger btn-sm"
-                  onClick={() => patchDriver(d.id, { suspended: !d.suspended, available: false })}
+                  onClick={() => act(setDriverStatus(d.id, d.suspended ? "verified" : "suspended"))}
                 >
                   {t(d.suspended ? "reactivate" : "suspend")}
                 </button>
@@ -245,12 +184,6 @@ function Dashboard() {
           ))}
         </div>
 
-        <details className="card p-4">
-          <summary className="cursor-pointer font-semibold">{t("add_driver")}</summary>
-          <div className="mt-4">
-            <DriverForm submitKey="add" onSubmit={(data) => addDriver(data, true)} />
-          </div>
-        </details>
       </section>
 
       <section className="grid gap-2">

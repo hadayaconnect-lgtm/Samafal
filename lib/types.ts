@@ -41,4 +41,6 @@ export type Ride = {
 export type State = {
   drivers: Driver[];
   rides: Ride[];
+  /** Faux tant que la première lecture de la base n'est pas terminée. */
+  ready: boolean;
 };

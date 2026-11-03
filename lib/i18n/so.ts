@@ -1,7 +1,7 @@
 import type { Key } from "./fr";
 
 /** Somali : traduction à faire relire par un locuteur natif avant le lancement. */
-export const so: Record<Key, string> = {
+export const so: Partial<Record<Key, string>> = {
   app_name: "Samafal",
   tagline: "Taksiga kuugu dhow, isla markiiba.",
   home_client: "Waxaan raadinayaa taksi",
@@ -128,4 +128,17 @@ export const so: Record<Key, string> = {
   ride_completed: "Dhammaaday",
   ride_declined: "La diiday",
   ride_cancelled: "La joojiyay",
+  auth_phone_title: "Gal",
+  auth_phone_label: "Lambarka taleefankaaga",
+  auth_phone_hint: "Lambar Jabuuti (8 god). Koodh ayaa laguugu soo diri doonaa SMS.",
+  auth_bad_phone: "Lambarku waa khalad.",
+  auth_send_code: "Hel koodhka",
+  auth_code_label: "Koodhka SMS-ka",
+  auth_verify: "Xaqiiji",
+  auth_wrong_code: "Koodhku waa khalad ama wuu dhacay.",
+  auth_change_number: "Beddel lambarka",
+  auth_name_title: "Yaad tahay?",
+  auth_name_save: "Keydi",
+  auth_error: "Wax qalad ah ayaa dhacay. Mar kale isku day.",
+  auth_logout: "Ka bax",
 };

@@ -1,91 +1,56 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Avatar } from "@/components/Avatar";
 import { DriverForm } from "@/components/DriverForm";
 import { ChevronIcon, PhoneIcon } from "@/components/Icons";
 import { useT } from "@/components/LangProvider";
 import { TopBar } from "@/components/TopBar";
-import { addDriver, confirmPaid, patchDriver, setRideStatus } from "@/lib/store";
-import { useApp } from "@/lib/useApp";
+import { AuthGate } from "@/components/AuthGate";
+import { signOut } from "@/lib/auth";
+import { confirmPaid, patchDriver, registerDriver, setRideStatus } from "@/lib/store";
+import { useAct, useApp } from "@/lib/useApp";
 import { fmtNum } from "@/lib/pricing";
 import { ZONES, zoneCoords, type ZoneId } from "@/lib/zones";
 import type { Driver, Ride } from "@/lib/types";
 
-const ME_KEY = "samafal:me";
 const isToday = (ts: number) => new Date(ts).toDateString() === new Date().toDateString();
 const tel = (p: string) => `tel:${p.replace(/\s/g, "")}`;
 
 export default function ChauffeurPage() {
   const { t } = useT();
+  return (
+    <AuthGate title={t("driver_title")}>
+      {(me) => <Inner meId={me.id} />}
+    </AuthGate>
+  );
+}
+
+function Inner({ meId }: { meId: string }) {
+  const { t } = useT();
   const app = useApp();
-  const [me, setMe] = useState<string | null | undefined>(undefined);
-
-  useEffect(() => {
-    try {
-      setMe(localStorage.getItem(ME_KEY));
-    } catch {
-      setMe(null);
-    }
-  }, []);
-
-  function login(id: string | null) {
-    setMe(id);
-    try {
-      if (id) localStorage.setItem(ME_KEY, id);
-      else localStorage.removeItem(ME_KEY);
-    } catch {
-      /* stockage indisponible */
-    }
-  }
-
-  const driver = me ? app.drivers.find((d) => d.id === me) : undefined;
+  const driver = app.drivers.find((d) => d.id === meId);
 
   return (
     <div className="min-h-dvh">
       <TopBar title={t("driver_title")} />
       <main className="mx-auto grid max-w-xl gap-4 p-4">
-        {me === undefined ? (
+        {!app.ready ? (
           <p>{t("loading")}</p>
         ) : driver ? (
-          <Dashboard driver={driver} onLogout={() => login(null)} />
+          <Dashboard driver={driver} onLogout={() => void signOut()} />
         ) : (
-          <Login drivers={app.drivers} onLogin={login} />
+          <section className="card grid gap-3 p-4">
+            <h2 className="text-lg font-bold">{t("register")}</h2>
+            <p className="text-sm text-ink/70">{t("register_note")}</p>
+            <DriverForm submitKey="register_btn" onSubmit={registerDriver} />
+            <button type="button" className="btn btn-ghost btn-sm w-fit" onClick={() => void signOut()}>
+              {t("auth_logout")}
+            </button>
+          </section>
         )}
       </main>
     </div>
-  );
-}
-
-function Login({ drivers, onLogin }: { drivers: Driver[]; onLogin: (id: string) => void }) {
-  const { t } = useT();
-  const [pick, setPick] = useState("");
-  return (
-    <>
-      <section className="card grid gap-3 p-4">
-        <h2 className="text-lg font-bold">{t("who_are_you")}</h2>
-        <div>
-          <label className="label" htmlFor="pick">{t("pick_driver")}</label>
-          <select id="pick" className="field" value={pick} onChange={(e) => setPick(e.target.value)}>
-            <option value="" />
-            {drivers.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name} · {d.plate}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button type="button" className="btn btn-primary" disabled={!pick} onClick={() => onLogin(pick)}>
-          {t("continue")}
-        </button>
-      </section>
-
-      <section className="card grid gap-3 p-4">
-        <h2 className="text-lg font-bold">{t("register")}</h2>
-        <p className="text-sm text-ink/70">{t("register_note")}</p>
-        <DriverForm submitKey="register_btn" onSubmit={(data) => onLogin(addDriver(data, false))} />
-      </section>
-    </>
   );
 }
 
@@ -107,6 +72,7 @@ function RideLine({ ride }: { ride: Ride }) {
 function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void }) {
   const { t } = useT();
   const app = useApp();
+  const act = useAct();
 
   const canWork = driver.verified && !driver.suspended;
   const mine = app.rides.filter((r) => r.driverId === driver.id);
@@ -125,7 +91,7 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
         const now = Date.now();
         if (now - last < 5000) return;
         last = now;
-        patchDriver(driver.id, { lat: p.coords.latitude, lng: p.coords.longitude });
+        patchDriver(driver.id, { lat: p.coords.latitude, lng: p.coords.longitude }).catch(() => {});
       },
       () => {},
       { enableHighAccuracy: true, maximumAge: 5000 },
@@ -135,7 +101,7 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
 
   function setZone(id: ZoneId) {
     const c = zoneCoords(id);
-    patchDriver(driver.id, { lat: c.lat, lng: c.lng });
+    act(patchDriver(driver.id, { lat: c.lat, lng: c.lng }));
   }
 
   const toggleDisabled = !canWork || Boolean(active);
@@ -168,7 +134,7 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
           aria-checked={driver.available}
           aria-label={t(driver.available ? "available_off" : "available_on")}
           disabled={toggleDisabled}
-          onClick={() => patchDriver(driver.id, { available: !driver.available })}
+          onClick={() => act(patchDriver(driver.id, { available: !driver.available }))}
           className={`flex w-full items-center justify-between gap-4 rounded-2xl p-4 text-start transition disabled:cursor-not-allowed disabled:opacity-50 ${
             driver.available ? "bg-green text-white" : "bg-mist text-ink"
           }`}
@@ -215,7 +181,7 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
             </a>
           </div>
           <RideLine ride={active} />
-          <button type="button" className="btn btn-primary" onClick={() => setRideStatus(active.id, "completed")}>
+          <button type="button" className="btn btn-primary" onClick={() => act(setRideStatus(active.id, "completed"))}>
             {t("finish_ride")}
           </button>
         </section>
@@ -237,10 +203,10 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
               </div>
               <RideLine ride={r} />
               <div className="grid grid-cols-2 gap-3">
-                <button type="button" className="btn btn-taxi" onClick={() => setRideStatus(r.id, "accepted")}>
+                <button type="button" className="btn btn-taxi" onClick={() => act(setRideStatus(r.id, "accepted"))}>
                   {t("accept")}
                 </button>
-                <button type="button" className="btn btn-danger" onClick={() => setRideStatus(r.id, "declined")}>
+                <button type="button" className="btn btn-danger" onClick={() => act(setRideStatus(r.id, "declined"))}>
                   {t("refuse")}
                 </button>
               </div>
@@ -258,7 +224,7 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
                 <strong>{r.clientName}</strong> · {fmtNum(r.price)} {t("currency")}
               </p>
               <p className="text-sm text-ink/70">{t(r.payStatus === "claimed" ? "paid_claimed_driver" : "awaiting_payment")}</p>
-              <button type="button" className="btn btn-primary btn-sm" onClick={() => confirmPaid(r.id)}>
+              <button type="button" className="btn btn-primary btn-sm" onClick={() => act(confirmPaid(r.id))}>
                 {t("confirm_paid")}
               </button>
             </div>
