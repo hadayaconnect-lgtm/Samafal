@@ -7,8 +7,9 @@ import { CheckIcon, ChevronIcon, PhoneIcon, PinIcon } from "@/components/Icons";
 import { TopBar } from "@/components/TopBar";
 import { useT } from "@/components/LangProvider";
 import { AuthGate } from "@/components/AuthGate";
+import { RatingBadge, RatingBar, RatingInput } from "@/components/Rating";
 import { useAct, useApp } from "@/lib/useApp";
-import { claimPaid, requestRide, setRideStatus } from "@/lib/store";
+import { claimPaid, rateRide, requestRide, setRideStatus } from "@/lib/store";
 import { ZONES, nearestZone, zoneCoords, type ZoneId } from "@/lib/zones";
 import { etaMin, roadKm, type LatLng } from "@/lib/geo";
 import { fmtNum, zonePrice } from "@/lib/pricing";
@@ -220,9 +221,12 @@ function Client() {
                               <span className="block truncate text-sm text-ink/70" dir="ltr">
                                 {d.vehicle} · {d.plate}
                               </span>
-                              <span className="flex items-center gap-1 text-xs font-semibold text-green-dark">
-                                <CheckIcon className="h-3.5 w-3.5" />
-                                {t("verified")}
+                              <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                                <span className="flex items-center gap-1 text-xs font-semibold text-green-dark">
+                                  <CheckIcon className="h-3.5 w-3.5" />
+                                  {t("verified")}
+                                </span>
+                                <RatingBadge rating={d.rating} count={d.ratingsCount} inspected={d.inspection !== null} />
                               </span>
                             </span>
                             <span className="shrink-0 text-end">
@@ -237,6 +241,7 @@ function Client() {
                     })}
                   </ul>
                 )}
+                {sel && (sel.d.ratingsCount > 0 || sel.d.inspection) && <RatingDetails driver={sel.d} />}
               </section>
 
               {sel && (
@@ -423,9 +428,77 @@ function RidePanel({ ride, driver, onDone }: { ride: Ride; driver: Driver; onDon
           )}
         </>
       )}
+      {ride.rated ? <p className="text-sm font-semibold text-green-dark">{t("rate_thanks")}</p> : <RateForm rideId={ride.id} />}
       <button type="button" className="btn btn-primary" onClick={onDone}>
         {t("new_ride")}
       </button>
     </div>
+  );
+}
+
+function RatingDetails({ driver }: { driver: Driver }) {
+  const { t, lang } = useT();
+  const fmt = (ts: number) => new Date(ts).toLocaleDateString(lang === "ar" ? "ar" : lang === "so" ? "so" : "fr-FR");
+  return (
+    <div className="mt-3 grid gap-3 rounded-2xl bg-mist p-4">
+      {driver.ratingsCount > 0 && (
+        <div className="grid gap-2">
+          <p className="text-sm font-bold">
+            {t("rate_clients")} <span className="font-normal text-ink/60">· {t("rate_count", { n: driver.ratingsCount })}</span>
+          </p>
+          <RatingBar label={t("rate_car")} value={driver.ratingCar} />
+          <RatingBar label={t("rate_clean")} value={driver.ratingClean} />
+          <RatingBar label={t("rate_ac")} value={driver.ratingAc} />
+          <RatingBar label={t("rate_drive")} value={driver.ratingDrive} />
+        </div>
+      )}
+      {driver.inspection && (
+        <div className="grid gap-2">
+          <p className="text-sm font-bold">
+            {t("rate_inspection")}{" "}
+            <span className="font-normal text-ink/60">· {t("rate_inspected_on", { date: fmt(driver.inspection.at) })}</span>
+          </p>
+          <RatingBar label={t("rate_car")} value={driver.inspection.car} />
+          <RatingBar label={t("rate_clean")} value={driver.inspection.clean} />
+          <RatingBar label={t("rate_ac")} value={driver.inspection.ac} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RateForm({ rideId }: { rideId: string }) {
+  const { t } = useT();
+  const act = useAct();
+  const [v, setV] = useState({ car: 5, clean: 5, ac: 5, drive: 5 });
+  const [comment, setComment] = useState("");
+  const [busy, setBusy] = useState(false);
+  return (
+    <section className="grid gap-3 rounded-2xl border border-line p-4">
+      <h3 className="font-bold">{t("rate_title")}</h3>
+      <RatingInput label={t("rate_car")} value={v.car} onChange={(n) => setV({ ...v, car: n })} />
+      <RatingInput label={t("rate_clean")} value={v.clean} onChange={(n) => setV({ ...v, clean: n })} />
+      <RatingInput label={t("rate_ac")} value={v.ac} onChange={(n) => setV({ ...v, ac: n })} />
+      <RatingInput label={t("rate_drive")} value={v.drive} onChange={(n) => setV({ ...v, drive: n })} />
+      <input
+        className="field"
+        maxLength={300}
+        placeholder={t("rate_comment")}
+        aria-label={t("rate_comment")}
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+      />
+      <button
+        type="button"
+        className="btn btn-taxi"
+        disabled={busy}
+        onClick={() => {
+          setBusy(true);
+          act(rateRide(rideId, { ...v, comment }).finally(() => setBusy(false)));
+        }}
+      >
+        {t("rate_send")}
+      </button>
+    </section>
   );
 }

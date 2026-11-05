@@ -3,14 +3,37 @@
 import { useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { AuthGate } from "@/components/AuthGate";
+import { RatingBadge, RatingInput } from "@/components/Rating";
 import { ChevronIcon } from "@/components/Icons";
 import { useT } from "@/components/LangProvider";
 import { TopBar } from "@/components/TopBar";
 import { signOut } from "@/lib/auth";
-import { setDriverStatus } from "@/lib/store";
+import { inspectDriver, setDriverStatus } from "@/lib/store";
 import { useAct, useApp } from "@/lib/useApp";
 import { fmtNum, zonePrice, ZONE_IDS } from "@/lib/pricing";
 import type { RideStatus } from "@/lib/types";
+
+function InspectForm({ driverId, onDone }: { driverId: string; onDone: () => void }) {
+  const { t } = useT();
+  const act = useAct();
+  const [v, setV] = useState({ car: 4, clean: 4, ac: 4 });
+  const [notes, setNotes] = useState("");
+  return (
+    <div className="grid w-full gap-3 rounded-2xl bg-mist p-4">
+      <h3 className="font-bold">{t("inspect_title")}</h3>
+      <RatingInput label={t("rate_car")} value={v.car} onChange={(n) => setV({ ...v, car: n })} />
+      <RatingInput label={t("rate_clean")} value={v.clean} onChange={(n) => setV({ ...v, clean: n })} />
+      <RatingInput label={t("rate_ac")} value={v.ac} onChange={(n) => setV({ ...v, ac: n })} />
+      <input className="field" maxLength={300} placeholder={t("inspect_notes")} aria-label={t("inspect_notes")} value={notes} onChange={(e) => setNotes(e.target.value)} />
+      <div className="flex gap-2">
+        <button type="button" className="btn btn-primary btn-sm" onClick={() => { act(inspectDriver(driverId, { ...v, notes })); onDone(); }}>
+          {t("inspect_save")}
+        </button>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={onDone}>{t("cancel")}</button>
+      </div>
+    </div>
+  );
+}
 
 const isToday = (ts: number) => new Date(ts).toDateString() === new Date().toDateString();
 
@@ -53,6 +76,7 @@ function Dashboard() {
   const act = useAct();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  const [inspecting, setInspecting] = useState<string | null>(null);
 
   const verified = app.drivers.filter((d) => d.verified);
   const online = app.drivers.filter((d) => d.verified && !d.suspended && d.available);
@@ -162,9 +186,18 @@ function Dashboard() {
                     <span className="chip chip-warn">{t("stat_pending")}</span>
                   )}
                   {d.available && !d.suspended && d.verified && <span className="chip">{t("state_online")}</span>}
+                  <RatingBadge rating={d.rating} count={d.ratingsCount} inspected={d.inspection !== null} />
                 </div>
+                <p className="mt-1 text-xs text-ink/60">
+                  {d.inspection
+                    ? `${t("rate_inspected_on", { date: new Date(d.inspection.at).toLocaleDateString("fr-FR") })} · ${d.inspection.car}/${d.inspection.clean}/${d.inspection.ac}`
+                    : t("rate_not_inspected")}
+                </p>
               </div>
               <div className="flex flex-wrap gap-2">
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => setInspecting(inspecting === d.id ? null : d.id)}>
+                  {t("inspect")}
+                </button>
                 <button
                   type="button"
                   className={`btn btn-sm ${d.verified ? "btn-ghost" : "btn-primary"}`}
@@ -180,6 +213,7 @@ function Dashboard() {
                   {t(d.suspended ? "reactivate" : "suspend")}
                 </button>
               </div>
+              {inspecting === d.id && <InspectForm driverId={d.id} onDone={() => setInspecting(null)} />}
             </div>
           ))}
         </div>

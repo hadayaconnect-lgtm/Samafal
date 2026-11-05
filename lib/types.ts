@@ -16,6 +16,14 @@ export type Driver = {
   joinedAt: number;
   walletOperator: string;
   walletNumber: string;
+  /** Avis des clients : nombre d'avis et moyennes par critère (null tant qu'il n'y en a pas). */
+  ratingsCount: number;
+  ratingCar: number | null;
+  ratingClean: number | null;
+  ratingAc: number | null;
+  ratingDrive: number | null;
+  /** Dernière inspection du syndicat (null si jamais inspecté). */
+  inspection: { car: number; clean: number; ac: number; at: number } | null;
 };
 
 export type RideStatus = "requested" | "accepted" | "completed" | "declined" | "cancelled";
@@ -36,6 +44,8 @@ export type Ride = {
   status: RideStatus;
   createdAt: number;
   updatedAt: number;
+  /** Le client a déjà noté cette course. */
+  rated: boolean;
 };
 
 export type State = {

@@ -18,11 +18,14 @@ let channel: RealtimeChannel | null = null;
 let wallets = new Map<string, { operator: string; number: string }>();
 let rawDrivers: Record<string, unknown>[] = [];
 let rawRides: Record<string, unknown>[] = [];
+let ratedIds = new Set<string>();
 const timers: Partial<Record<"drivers" | "rides", ReturnType<typeof setTimeout>>> = {};
 
 function emit() {
   listeners.forEach((l) => l());
 }
+
+const num = (v: unknown) => (v == null ? null : Number(v));
 
 function rebuild() {
   const drivers: Driver[] = rawDrivers.map((r) => {
@@ -44,6 +47,20 @@ function rebuild() {
       joinedAt: new Date(r.created_at as string).getTime(),
       walletOperator: w?.operator ?? "",
       walletNumber: w?.number ?? "",
+      ratingsCount: (r.ratings_count as number) ?? 0,
+      ratingCar: num(r.rating_car),
+      ratingClean: num(r.rating_clean),
+      ratingAc: num(r.rating_ac),
+      ratingDrive: num(r.rating_drive),
+      inspection:
+        r.inspected_at != null
+          ? {
+              car: r.inspection_car as number,
+              clean: r.inspection_clean as number,
+              ac: r.inspection_ac as number,
+              at: new Date(r.inspected_at as string).getTime(),
+            }
+          : null,
     };
   });
   const rides: Ride[] = rawRides.map((r) => ({
@@ -60,6 +77,7 @@ function rebuild() {
     status: r.status as RideStatus,
     createdAt: new Date(r.created_at as string).getTime(),
     updatedAt: new Date(r.updated_at as string).getTime(),
+    rated: ratedIds.has(r.id as string),
   }));
   cache = { drivers, rides, ready: true };
   emit();
@@ -73,6 +91,10 @@ async function loadWallets() {
   const { data } = await supabase.from("driver_wallets").select("*");
   if (data) wallets = new Map(data.map((w) => [w.driver_id as string, { operator: w.operator as string, number: w.number as string }]));
 }
+async function loadRatings() {
+  const { data } = await supabase.from("ride_ratings").select("ride_id");
+  if (data) ratedIds = new Set(data.map((x) => x.ride_id as string));
+}
 async function loadRides() {
   const { data } = await supabase.from("rides").select("*").order("created_at", { ascending: false }).limit(200);
   if (data) rawRides = data;
@@ -80,7 +102,7 @@ async function loadRides() {
 
 export async function refreshAll() {
   if (!userId) return;
-  await Promise.all([loadDrivers(), loadWallets(), loadRides()]);
+  await Promise.all([loadDrivers(), loadWallets(), loadRides(), loadRatings()]);
   rebuild();
 }
 
@@ -90,7 +112,7 @@ function schedule(table: "drivers" | "rides") {
     timers[table] = undefined;
     if (!userId) return;
     if (table === "drivers") await loadDrivers();
-    else await Promise.all([loadRides(), loadWallets(), loadDrivers()]);
+    else await Promise.all([loadRides(), loadWallets(), loadDrivers(), loadRatings()]);
     rebuild();
   }, 250);
 }
@@ -106,6 +128,7 @@ function apply(session: Session | null) {
   if (!id) {
     rawDrivers = [];
     rawRides = [];
+    ratedIds = new Set();
     wallets = new Map();
     cache = EMPTY;
     emit();
@@ -250,4 +273,34 @@ export async function confirmPaid(id: string) {
   const { error } = await supabase.rpc("ride_action", { p_ride: id, p_action: "confirm_paid" });
   fail(error);
   await refreshAll();
+}
+
+export type RatingInput = { car: number; clean: number; ac: number; drive: number; comment?: string };
+
+/** Le client note une course terminée. */
+export async function rateRide(id: string, r: RatingInput) {
+  const { error } = await supabase.rpc("rate_ride", {
+    p_ride: id,
+    p_car: r.car,
+    p_clean: r.clean,
+    p_ac: r.ac,
+    p_drive: r.drive,
+    p_comment: r.comment ?? null,
+  });
+  fail(error);
+  await refreshAll();
+}
+
+/** Le syndicat enregistre une inspection du véhicule. */
+export async function inspectDriver(id: string, r: { car: number; clean: number; ac: number; notes?: string }) {
+  const { error } = await supabase.rpc("inspect_driver", {
+    p_driver: id,
+    p_car: r.car,
+    p_clean: r.clean,
+    p_ac: r.ac,
+    p_notes: r.notes ?? null,
+  });
+  fail(error);
+  await loadDrivers();
+  rebuild();
 }
