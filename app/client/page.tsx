@@ -7,9 +7,9 @@ import { CheckIcon, ChevronIcon, PhoneIcon, PinIcon } from "@/components/Icons";
 import { TopBar } from "@/components/TopBar";
 import { useT } from "@/components/LangProvider";
 import { AuthGate } from "@/components/AuthGate";
-import { RatingBadge, RatingBar, RatingInput } from "@/components/Rating";
+import { RatingBadge, RatingBar } from "@/components/Rating";
 import { useAct, useApp } from "@/lib/useApp";
-import { claimPaid, rateRide, requestRide, setRideStatus } from "@/lib/store";
+import { claimPaid, commentRide, requestRide, setRideStatus } from "@/lib/store";
 import { ZONES, nearestZone, zoneCoords, type ZoneId } from "@/lib/zones";
 import { etaMin, roadKm, type LatLng } from "@/lib/geo";
 import { fmtNum, zonePrice } from "@/lib/pricing";
@@ -226,7 +226,7 @@ function Client() {
                                   <CheckIcon className="h-3.5 w-3.5" />
                                   {t("verified")}
                                 </span>
-                                <RatingBadge rating={d.rating} count={d.ratingsCount} inspected={d.inspection !== null} />
+                                <RatingBadge rating={d.rating} inspected={d.inspection !== null} />
                               </span>
                             </span>
                             <span className="shrink-0 text-end">
@@ -241,7 +241,7 @@ function Client() {
                     })}
                   </ul>
                 )}
-                {sel && (sel.d.ratingsCount > 0 || sel.d.inspection) && <RatingDetails driver={sel.d} />}
+                {sel && <RatingDetails driver={sel.d} />}
               </section>
 
               {sel && (
@@ -428,7 +428,7 @@ function RidePanel({ ride, driver, onDone }: { ride: Ride; driver: Driver; onDon
           )}
         </>
       )}
-      {ride.rated ? <p className="text-sm font-semibold text-green-dark">{t("rate_thanks")}</p> : <RateForm rideId={ride.id} />}
+      {ride.commented ? <p className="text-sm font-semibold text-green-dark">{t("rate_thanks")}</p> : <CommentForm rideId={ride.id} />}
       <button type="button" className="btn btn-primary" onClick={onDone}>
         {t("new_ride")}
       </button>
@@ -438,20 +438,12 @@ function RidePanel({ ride, driver, onDone }: { ride: Ride; driver: Driver; onDon
 
 function RatingDetails({ driver }: { driver: Driver }) {
   const { t, lang } = useT();
+  const app = useApp();
   const fmt = (ts: number) => new Date(ts).toLocaleDateString(lang === "ar" ? "ar" : lang === "so" ? "so" : "fr-FR");
+  const comments = app.comments.filter((c) => c.driverId === driver.id).slice(0, 5);
+  if (!driver.inspection && comments.length === 0) return null;
   return (
     <div className="mt-3 grid gap-3 rounded-2xl bg-mist p-4">
-      {driver.ratingsCount > 0 && (
-        <div className="grid gap-2">
-          <p className="text-sm font-bold">
-            {t("rate_clients")} <span className="font-normal text-ink/60">· {t("rate_count", { n: driver.ratingsCount })}</span>
-          </p>
-          <RatingBar label={t("rate_car")} value={driver.ratingCar} />
-          <RatingBar label={t("rate_clean")} value={driver.ratingClean} />
-          <RatingBar label={t("rate_ac")} value={driver.ratingAc} />
-          <RatingBar label={t("rate_drive")} value={driver.ratingDrive} />
-        </div>
-      )}
       {driver.inspection && (
         <div className="grid gap-2">
           <p className="text-sm font-bold">
@@ -463,38 +455,47 @@ function RatingDetails({ driver }: { driver: Driver }) {
           <RatingBar label={t("rate_ac")} value={driver.inspection.ac} />
         </div>
       )}
+      {comments.length > 0 && (
+        <div className="grid gap-2">
+          <p className="text-sm font-bold">{t("comments_title")}</p>
+          {comments.map((c) => (
+            <p key={c.rideId} className="rounded-xl bg-white p-3 text-sm" dir="auto">
+              {c.text}
+              <span className="mt-1 block text-xs text-ink/60">
+                {c.author} · {fmt(c.at)}
+              </span>
+            </p>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-function RateForm({ rideId }: { rideId: string }) {
+function CommentForm({ rideId }: { rideId: string }) {
   const { t } = useT();
   const act = useAct();
-  const [v, setV] = useState({ car: 5, clean: 5, ac: 5, drive: 5 });
-  const [comment, setComment] = useState("");
+  const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   return (
     <section className="grid gap-3 rounded-2xl border border-line p-4">
       <h3 className="font-bold">{t("rate_title")}</h3>
-      <RatingInput label={t("rate_car")} value={v.car} onChange={(n) => setV({ ...v, car: n })} />
-      <RatingInput label={t("rate_clean")} value={v.clean} onChange={(n) => setV({ ...v, clean: n })} />
-      <RatingInput label={t("rate_ac")} value={v.ac} onChange={(n) => setV({ ...v, ac: n })} />
-      <RatingInput label={t("rate_drive")} value={v.drive} onChange={(n) => setV({ ...v, drive: n })} />
-      <input
-        className="field"
+      <textarea
+        className="field min-h-20"
         maxLength={300}
-        placeholder={t("rate_comment")}
         aria-label={t("rate_comment")}
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
+        placeholder={t("rate_comment")}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
       />
+      <p className="text-xs text-ink/60">{t("rate_comment_hint")}</p>
       <button
         type="button"
         className="btn btn-taxi"
-        disabled={busy}
+        disabled={busy || text.trim().length < 2}
         onClick={() => {
           setBusy(true);
-          act(rateRide(rideId, { ...v, comment }).finally(() => setBusy(false)));
+          act(commentRide(rideId, text.trim()).finally(() => setBusy(false)));
         }}
       >
         {t("rate_send")}

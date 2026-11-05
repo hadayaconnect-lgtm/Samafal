@@ -8,7 +8,7 @@ import { ChevronIcon } from "@/components/Icons";
 import { useT } from "@/components/LangProvider";
 import { TopBar } from "@/components/TopBar";
 import { signOut } from "@/lib/auth";
-import { inspectDriver, setDriverStatus } from "@/lib/store";
+import { deleteComment, inspectDriver, setDriverStatus } from "@/lib/store";
 import { useAct, useApp } from "@/lib/useApp";
 import { fmtNum, zonePrice, ZONE_IDS } from "@/lib/pricing";
 import type { RideStatus } from "@/lib/types";
@@ -186,7 +186,7 @@ function Dashboard() {
                     <span className="chip chip-warn">{t("stat_pending")}</span>
                   )}
                   {d.available && !d.suspended && d.verified && <span className="chip">{t("state_online")}</span>}
-                  <RatingBadge rating={d.rating} count={d.ratingsCount} inspected={d.inspection !== null} />
+                  <RatingBadge rating={d.rating} inspected={d.inspection !== null} />
                 </div>
                 <p className="mt-1 text-xs text-ink/60">
                   {d.inspection
@@ -214,6 +214,28 @@ function Dashboard() {
                 </button>
               </div>
               {inspecting === d.id && <InspectForm driverId={d.id} onDone={() => setInspecting(null)} />}
+              {app.comments.some((c) => c.driverId === d.id) && (
+                <details className="w-full text-sm">
+                  <summary className="cursor-pointer font-semibold">
+                    {t("comments_title")} ({app.comments.filter((c) => c.driverId === d.id).length})
+                  </summary>
+                  <div className="mt-2 grid gap-2">
+                    {app.comments
+                      .filter((c) => c.driverId === d.id)
+                      .map((c) => (
+                        <div key={c.rideId} className="flex items-start justify-between gap-3 rounded-xl bg-mist p-3">
+                          <p dir="auto">
+                            {c.text}
+                            <span className="block text-xs text-ink/60">{c.author} · {new Date(c.at).toLocaleDateString("fr-FR")}</span>
+                          </p>
+                          <button type="button" className="btn btn-danger btn-sm shrink-0" onClick={() => act(deleteComment(c.rideId))}>
+                            {t("comments_delete")}
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                </details>
+              )}
             </div>
           ))}
         </div>

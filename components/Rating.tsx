@@ -27,17 +27,15 @@ export function RatingInput({ label, value, onChange }: { label: string; value: 
   );
 }
 
-/** Note sur 5 en petit : « ★ 4,6 · 12 avis » ou « Nouveau ». */
-export function RatingBadge({ rating, count, inspected }: { rating: number; count: number; inspected: boolean }) {
+/** Note du syndicat en petit : « ★ 4,3 · Inspecté » ou « Non inspecté ». */
+export function RatingBadge({ rating, inspected }: { rating: number; inspected: boolean }) {
   const { t } = useT();
-  if (count === 0 && !inspected) {
-    return <span className="chip">{t("rate_new")}</span>;
-  }
+  if (!inspected) return <span className="chip">{t("rate_new")}</span>;
   return (
     <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink" dir="ltr">
       <span className="text-taxi" aria-hidden="true">★</span>
       <span className="tabular-nums">{rating.toFixed(1)}</span>
-      {count > 0 && <span className="font-normal text-ink/60">· {t("rate_count", { n: count })}</span>}
+      <span className="font-normal text-ink/60">· {t("rate_inspected")}</span>
     </span>
   );
 }

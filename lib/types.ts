@@ -16,12 +16,6 @@ export type Driver = {
   joinedAt: number;
   walletOperator: string;
   walletNumber: string;
-  /** Avis des clients : nombre d'avis et moyennes par critère (null tant qu'il n'y en a pas). */
-  ratingsCount: number;
-  ratingCar: number | null;
-  ratingClean: number | null;
-  ratingAc: number | null;
-  ratingDrive: number | null;
   /** Dernière inspection du syndicat (null si jamais inspecté). */
   inspection: { car: number; clean: number; ac: number; at: number } | null;
 };
@@ -44,13 +38,22 @@ export type Ride = {
   status: RideStatus;
   createdAt: number;
   updatedAt: number;
-  /** Le client a déjà noté cette course. */
-  rated: boolean;
+  /** Le client a déjà commenté cette course. */
+  commented: boolean;
+};
+
+export type Comment = {
+  rideId: string;
+  driverId: string;
+  author: string;
+  text: string;
+  at: number;
 };
 
 export type State = {
   drivers: Driver[];
   rides: Ride[];
+  comments: Comment[];
   /** Faux tant que la première lecture de la base n'est pas terminée. */
   ready: boolean;
 };
