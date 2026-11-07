@@ -8,37 +8,10 @@ import { ChevronIcon } from "@/components/Icons";
 import { useT } from "@/components/LangProvider";
 import { TopBar } from "@/components/TopBar";
 import { signOut } from "@/lib/auth";
-import { deleteComment, inspectDriver, setDriverStatus, setPrice } from "@/lib/store";
+import { deleteComment, inspectDriver, setDriverStatus } from "@/lib/store";
 import { useAct, useApp } from "@/lib/useApp";
-import { fmtNum, zonePrice, ZONE_IDS } from "@/lib/pricing";
+import { fmtNum } from "@/lib/pricing";
 import type { RideStatus } from "@/lib/types";
-
-function PriceCell({ a, b, value }: { a: string; b: string; value: number }) {
-  const act = useAct();
-  const [text, setText] = useState(String(value));
-  const [shown, setShown] = useState(value);
-  if (value !== shown) {
-    setShown(value);
-    setText(String(value));
-  }
-  function save() {
-    const n = Math.round(Number(text));
-    if (!Number.isFinite(n) || n <= 0) return setText(String(value));
-    if (n !== value) act(setPrice(a, b, n));
-  }
-  return (
-    <input
-      className="w-20 rounded-lg border border-line bg-white px-2 py-1.5 text-sm tabular-nums"
-      inputMode="numeric"
-      aria-label={`${a} - ${b}`}
-      value={text}
-      onChange={(e) => setText(e.target.value.replace(/\D/g, ""))}
-      onBlur={save}
-      onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-      dir="ltr"
-    />
-  );
-}
 
 function InspectForm({ driverId, onDone }: { driverId: string; onDone: () => void }) {
   const { t } = useT();
@@ -294,39 +267,6 @@ function Dashboard() {
             );
           })
         )}
-      </section>
-
-      <section className="grid gap-2">
-        <h2 className="text-lg font-bold">{t("price_table")}</h2>
-        <p className="text-sm text-ink/70">{t("price_edit_hint")}</p>
-        <div className="card overflow-x-auto">
-          <table className="w-full min-w-[36rem] border-collapse text-sm tabular-nums">
-            <thead>
-              <tr>
-                <th className="p-2" />
-                {ZONE_IDS.map((z) => (
-                  <th key={z} className="p-2 text-start text-xs font-semibold">{t(`zone_${z}`)}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {ZONE_IDS.map((a, i) => (
-                <tr key={a} className="border-t border-line">
-                  <th className="p-2 text-start text-xs font-semibold">{t(`zone_${a}`)}</th>
-                  {ZONE_IDS.map((b, j) => (
-                    <td key={b} className={`p-1 ${a === b ? "bg-green-soft" : ""}`}>
-                      {j >= i ? (
-                        <PriceCell a={a} b={b} value={zonePrice(a, b)} />
-                      ) : (
-                        <span className="px-2 text-ink/40">{fmtNum(zonePrice(a, b))}</span>
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </section>
     </>
   );

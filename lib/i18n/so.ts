@@ -124,7 +124,6 @@ export const so: Partial<Record<Key, string>> = {
   add: "Ku dar",
   recent_rides: "Safarradii ugu dambeeyay",
   no_rides: "Safar ma jiro hadda.",
-  price_table: "Qiimaha aagagga (ku meel gaar)",
   logout_union: "Ka bax",
   ride_requested: "Sugaya",
   ride_accepted: "La aqbalay",

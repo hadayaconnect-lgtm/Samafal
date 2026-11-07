@@ -124,7 +124,6 @@ export const ar: Partial<Record<Key, string>> = {
   add: "إضافة",
   recent_rides: "آخر الرحلات",
   no_rides: "لا توجد رحلات حاليًا.",
-  price_table: "الأسعار حسب المنطقة (مؤقتة)",
   logout_union: "خروج",
   ride_requested: "بانتظار",
   ride_accepted: "مقبولة",

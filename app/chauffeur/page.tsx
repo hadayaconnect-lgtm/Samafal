@@ -65,7 +65,26 @@ function RideLine({ ride }: { ride: Ride }) {
         {fmtNum(ride.price)} {t("currency")}
       </span>
       <span className="chip w-full sm:w-auto">{t(ride.payment === "cash" ? "pay_cash" : "pay_mobile")}</span>
+      <span className="w-full text-xs text-ink/60">{t("offer_from_client")}</span>
     </p>
+  );
+}
+
+const mapsDir = (from: { lat: number; lng: number } | null, to: { lat: number; lng: number }) =>
+  `https://www.google.com/maps/dir/?api=1${from ? `&origin=${from.lat},${from.lng}` : ""}&destination=${to.lat},${to.lng}&travelmode=driving`;
+
+function RouteLinks({ ride }: { ride: Ride }) {
+  const { t } = useT();
+  const dest = zoneCoords(ride.destZone);
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <a className="btn btn-ghost btn-sm" href={mapsDir(null, ride.pickup)} target="_blank" rel="noopener noreferrer">
+        {t("route_to_client")}
+      </a>
+      <a className="btn btn-ghost btn-sm" href={mapsDir(ride.pickup, dest)} target="_blank" rel="noopener noreferrer">
+        {t("route_to_dest")}
+      </a>
+    </div>
   );
 }
 
@@ -181,6 +200,7 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
             </a>
           </div>
           <RideLine ride={active} />
+          <RouteLinks ride={active} />
           <button type="button" className="btn btn-primary" onClick={() => act(setRideStatus(active.id, "completed"))}>
             {t("finish_ride")}
           </button>
@@ -202,6 +222,7 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
                 <p className="min-w-0 flex-1 truncate font-bold">{r.clientName}</p>
               </div>
               <RideLine ride={r} />
+              <RouteLinks ride={r} />
               <div className="grid grid-cols-2 gap-3">
                 <button type="button" className="btn btn-taxi" onClick={() => act(setRideStatus(r.id, "accepted"))}>
                   {t("accept")}

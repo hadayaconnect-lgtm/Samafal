@@ -15,7 +15,7 @@ Ouvrir http://localhost:3000. Pour voir le parcours complet, ouvrir deux onglets
 
 ## Décisions de conception
 
-- **Tarif** : prix fixe par zone (7 zones de Djibouti-ville). Tableau provisoire dans `lib/pricing.ts`, à confirmer. Les coordonnées des zones (`lib/zones.ts`) sont approximatives.
+- **Tarif** : le client propose son prix (500 à 5000 FDJ, par pas de 100) ; le chauffeur accepte ou refuse, sans contre-offre. Limites vérifiées côté serveur (`supabase/migration-offre.sql`). Destination choisie dans une liste de 10 zones ; le chauffeur ouvre l'itinéraire dans Google Maps.
 - **Paiement** : espèces, ou mobile money par transfert direct au numéro du chauffeur. Le client annonce « J'ai payé », le chauffeur confirme « Paiement reçu ». Aucune API d'opérateur pour l'instant.
 - **Langues** : français, somali, arabe (affichage de droite à gauche), afar. Les textes somali et arabe doivent être relus par des locuteurs natifs. L'afar est à remplir dans `lib/i18n/aa.ts` (en attendant, le français s'affiche).
 - **Administration** (`/admin`) : valide ou suspend les chauffeurs, inspecte les véhicules, modère les commentaires. Réservée aux comptes ayant le rôle `union` dans la table `profiles` (le nom technique du rôle est resté `union`).

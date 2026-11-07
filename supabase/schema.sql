@@ -262,9 +262,10 @@ create policy rides_select on public.rides
 create policy rides_insert on public.rides
   for insert to authenticated with check (client_id = auth.uid());
 grant select on public.rides to authenticated;
-grant insert (driver_id, pickup_zone, dest_zone, pickup_lat, pickup_lng, payment) on public.rides to authenticated;
+grant insert (driver_id, pickup_zone, dest_zone, pickup_lat, pickup_lng, payment, price) on public.rides to authenticated;
 
--- Le prix, le nom et le téléphone du client sont fixés côté serveur.
+-- Le client propose son prix (500 à 5000 FDJ, par pas de 100) ; le chauffeur
+-- accepte ou refuse. Le nom et le téléphone du client sont fixés côté serveur.
 create or replace function public.rides_before_insert()
 returns trigger
 language plpgsql
@@ -289,9 +290,8 @@ begin
   new.client_id := auth.uid();
   new.client_name := coalesce(p.full_name, '');
   new.client_phone := coalesce(p.phone, '');
-  new.price := public.zone_price(new.pickup_zone, new.dest_zone);
-  if new.price is null then
-    raise exception 'Prix inconnu pour ce trajet';
+  if new.price is null or new.price < 500 or new.price > 5000 or new.price % 100 <> 0 then
+    raise exception 'Prix proposé invalide (500 à 5000 FDJ, par pas de 100)';
   end if;
   new.status := 'requested';
   new.pay_status := 'pending';

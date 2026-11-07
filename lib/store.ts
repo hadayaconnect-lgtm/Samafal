@@ -241,6 +241,7 @@ export async function requestRide(input: {
   pickupZone: ZoneId;
   destZone: ZoneId;
   payment: Payment;
+  price: number;
 }): Promise<string> {
   const { data, error } = await supabase
     .from("rides")
@@ -251,6 +252,7 @@ export async function requestRide(input: {
       pickup_lat: input.pickup.lat,
       pickup_lng: input.pickup.lng,
       payment: input.payment,
+      price: input.price,
     })
     .select("id")
     .single();

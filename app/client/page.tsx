@@ -12,7 +12,7 @@ import { useAct, useApp } from "@/lib/useApp";
 import { claimPaid, commentRide, requestRide, setRideStatus } from "@/lib/store";
 import { ZONES, nearestZone, zoneCoords, type ZoneId } from "@/lib/zones";
 import { etaMin, roadKm, type LatLng } from "@/lib/geo";
-import { fmtNum, zonePrice } from "@/lib/pricing";
+import { DEFAULT_OFFER, fmtNum, MAX_OFFER, MIN_OFFER, OFFER_STEP } from "@/lib/pricing";
 import type { Driver, Payment, Ride } from "@/lib/types";
 
 const TaxiMap = dynamic(() => import("@/components/TaxiMap"), {
@@ -43,6 +43,7 @@ function Client() {
   const [destId, setDestId] = useState<ZoneId>("aeroport");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [payment, setPayment] = useState<Payment>("cash");
+  const [price, setPrice] = useState(DEFAULT_OFFER);
   const [rideId, setRideId] = useState<string | null>(null);
 
   const sheetRef = useRef<HTMLElement>(null);
@@ -91,7 +92,6 @@ function Client() {
   );
 
   const sel = nearby.find((n) => n.d.id === selectedId) ?? nearby[0];
-  const price = zonePrice(pickupZone, destId);
 
   const ride = rideId ? app.rides.find((r) => r.id === rideId) : undefined;
   const rideActive = ride !== undefined && ride.status !== "cancelled";
@@ -123,6 +123,7 @@ function Client() {
         pickupZone,
         destZone: destId,
         payment,
+        price,
       }).then(saveRideId),
     );
   }
@@ -246,6 +247,34 @@ function Client() {
 
               {sel && (
                 <>
+                  <section aria-label={t("offer_label")}>
+                    <span className="label">{t("offer_label")}</span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        className="btn btn-ghost h-12 w-12 shrink-0 text-xl"
+                        aria-label={t("offer_less")}
+                        disabled={price <= MIN_OFFER}
+                        onClick={() => setPrice((p) => Math.max(MIN_OFFER, p - OFFER_STEP))}
+                      >
+                        −
+                      </button>
+                      <p className="flex-1 text-center text-2xl font-bold tabular-nums" dir="ltr" aria-live="polite">
+                        {fmtNum(price)} {t("currency")}
+                      </p>
+                      <button
+                        type="button"
+                        className="btn btn-ghost h-12 w-12 shrink-0 text-xl"
+                        aria-label={t("offer_more")}
+                        disabled={price >= MAX_OFFER}
+                        onClick={() => setPrice((p) => Math.min(MAX_OFFER, p + OFFER_STEP))}
+                      >
+                        +
+                      </button>
+                    </div>
+                    <p className="mt-2 text-center text-xs text-ink/60">{t("offer_hint")}</p>
+                  </section>
+
                   <section aria-label={t("pay_method")}>
                     <span className="label">{t("pay_method")}</span>
                     <div className="grid grid-cols-2 gap-2" role="group">
