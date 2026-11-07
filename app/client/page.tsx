@@ -8,6 +8,7 @@ import { TopBar } from "@/components/TopBar";
 import { useT } from "@/components/LangProvider";
 import { AuthGate } from "@/components/AuthGate";
 import { RatingBadge, RatingBar } from "@/components/Rating";
+import { signOut } from "@/lib/auth";
 import { useAct, useApp } from "@/lib/useApp";
 import { claimPaid, commentRide, requestRide, setRideStatus } from "@/lib/store";
 import { ZONES, nearestZone, zoneCoords, type ZoneId } from "@/lib/zones";
@@ -298,6 +299,10 @@ function Client() {
 
                 </>
               )}
+
+              <button type="button" className="btn btn-ghost btn-sm w-fit" onClick={() => void signOut()}>
+                {t("auth_logout")}
+              </button>
             </div>
 
             {sel && (
