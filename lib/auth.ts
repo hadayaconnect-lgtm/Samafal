@@ -40,6 +40,13 @@ export async function verifyEmailCode(email: string, token: string) {
   if (error) throw new Error(error.message);
 }
 
+/** Enregistre le nom et le numéro saisis avant la connexion (première connexion par e-mail). */
+export async function saveLoginDetails(name: string, phone: string) {
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) return;
+  await supabase.from("profiles").update({ full_name: name, phone }).eq("id", data.user.id);
+}
+
 export async function signOut() {
   await supabase.auth.signOut();
 }

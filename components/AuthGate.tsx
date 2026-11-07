@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import {
   normalizePhone,
+  saveLoginDetails,
   sendCode,
   sendEmailCode,
   signOut,
@@ -91,10 +92,17 @@ function CodeLogin({ mode }: { mode: "phone" | "email" }) {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Première connexion par e-mail : nom et téléphone demandés avant l'envoi du code.
+  const [isNew, setIsNew] = useState(true);
+  const [name, setName] = useState("");
+  const [contact, setContact] = useState("");
+  const askDetails = isEmail && isNew;
 
   async function send() {
     const v = isEmail ? validEmail(input) : normalizePhone(input);
     if (!v) return setError(t(isEmail ? "auth_bad_email" : "auth_bad_phone"));
+    if (askDetails && name.trim().length < 2) return setError(t("auth_need_name"));
+    if (askDetails && !normalizePhone(contact)) return setError(t("auth_bad_phone"));
     setBusy(true);
     setError(null);
     try {
@@ -112,6 +120,8 @@ function CodeLogin({ mode }: { mode: "phone" | "email" }) {
     setError(null);
     try {
       await (isEmail ? verifyEmailCode(target, code) : verifyCode(target, code));
+      const p = normalizePhone(contact);
+      if (askDetails && p) await saveLoginDetails(name.trim(), p).catch(() => {});
     } catch {
       setError(t("auth_wrong_code"));
       setBusy(false);
@@ -157,6 +167,43 @@ function CodeLogin({ mode }: { mode: "phone" | "email" }) {
         )}
         <p className="mt-1 text-xs text-ink/60">{t(isEmail ? "auth_email_hint" : "auth_phone_hint")}</p>
       </div>
+      {isEmail && (
+        <>
+          {isNew && (
+            <>
+              <div>
+                <label className="label" htmlFor="login-name">{t("your_name")}</label>
+                <input
+                  id="login-name"
+                  className="field"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="name"
+                />
+              </div>
+              <div>
+                <label className="label" htmlFor="login-contact">{t("auth_contact_phone")}</label>
+                <div className="flex items-center gap-2" dir="ltr">
+                  <span className="rounded-xl bg-mist px-3 py-3 font-semibold">+253</span>
+                  <input
+                    id="login-contact"
+                    className="field"
+                    inputMode="tel"
+                    autoComplete="tel-national"
+                    placeholder="77 00 00 00"
+                    value={contact}
+                    onChange={(e) => setContact(e.target.value)}
+                  />
+                </div>
+                <p className="mt-1 text-xs text-ink/60">{t("auth_contact_phone_hint")}</p>
+              </div>
+            </>
+          )}
+          <button type="button" className="btn btn-ghost btn-sm w-fit" onClick={() => setIsNew((v) => !v)}>
+            {t(isNew ? "auth_have_account" : "auth_first_time")}
+          </button>
+        </>
+      )}
       {error && <p className="text-sm text-bad">{error}</p>}
       <button type="submit" className="btn btn-primary" disabled={busy}>
         {t("auth_send_code")}
