@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 
-export type Profile = { id: string; phone: string | null; full_name: string | null; role: "client" | "union" };
+export type Profile = { id: string; phone: string | null; email: string | null; full_name: string | null; role: "client" | "union" };
 
 /** 77 00 00 00 -> +25377000000. Un numéro déjà international est conservé. */
 export function normalizePhone(input: string): string | null {
@@ -22,6 +22,21 @@ export async function sendCode(phone: string) {
 
 export async function verifyCode(phone: string, token: string) {
   const { error } = await supabase.auth.verifyOtp({ phone, token: token.trim(), type: "sms" });
+  if (error) throw new Error(error.message);
+}
+
+export function validEmail(input: string): string | null {
+  const e = input.trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e) ? e : null;
+}
+
+export async function sendEmailCode(email: string) {
+  const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+  if (error) throw new Error(error.message);
+}
+
+export async function verifyEmailCode(email: string, token: string) {
+  const { error } = await supabase.auth.verifyOtp({ email, token: token.trim(), type: "email" });
   if (error) throw new Error(error.message);
 }
 
@@ -59,9 +74,12 @@ export function useAuth() {
   }, [loadProfile]);
 
   const saveName = useCallback(
-    async (name: string) => {
+    async (name: string, phone?: string) => {
       if (!session) return;
-      const { error } = await supabase.from("profiles").update({ full_name: name }).eq("id", session.user.id);
+      const patch: { full_name?: string; phone?: string } = {};
+      if (name) patch.full_name = name;
+      if (phone) patch.phone = phone;
+      const { error } = await supabase.from("profiles").update(patch).eq("id", session.user.id);
       if (error) throw new Error(error.message);
       await loadProfile(session.user.id);
     },

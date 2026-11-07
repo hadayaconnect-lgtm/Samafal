@@ -13,6 +13,7 @@
 create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   phone text,
+  email text,
   full_name text,
   role text not null default 'client' check (role in ('client', 'union')),
   created_at timestamptz not null default now()
@@ -35,7 +36,7 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, phone) values (new.id, new.phone)
+  insert into public.profiles (id, phone, email) values (new.id, new.phone, new.email)
   on conflict (id) do nothing;
   return new;
 end;
@@ -51,7 +52,23 @@ create policy profiles_select on public.profiles
 create policy profiles_update on public.profiles
   for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
 grant select on public.profiles to authenticated;
-grant update (full_name) on public.profiles to authenticated;
+grant update (full_name, phone) on public.profiles to authenticated;
+
+-- Un numéro déjà présent (vérifié par SMS) ne peut pas être remplacé.
+create or replace function public.profiles_keep_phone()
+returns trigger
+language plpgsql
+as $$
+begin
+  if old.phone is not null and old.phone <> '' then
+    new.phone := old.phone;
+  end if;
+  return new;
+end;
+$$;
+create trigger profiles_keep_phone
+  before update on public.profiles
+  for each row execute function public.profiles_keep_phone();
 
 -- ---------------------------------------------------------------------
 -- 2. Zones et prix (modifiables par le syndicat)
