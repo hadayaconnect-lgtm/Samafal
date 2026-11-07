@@ -145,6 +145,8 @@ function Client() {
           focus={focus}
           user={startPt}
           dest={destPt}
+          userLabel={t("pickup")}
+          destLabel={t("destination")}
           drivers={mapDrivers}
           onSelect={showRide ? undefined : setSelectedId}
           bottomPad={sheetH}
@@ -169,7 +171,7 @@ function Client() {
               <section className="grid gap-2" aria-label={t("pickup")}>
                 <div className="flex items-center gap-3">
                   <span className="h-3 w-3 shrink-0 rounded-full bg-[#2563eb] ring-4 ring-[#2563eb]/20" aria-hidden="true" />
-                  <label htmlFor="pickup" className="sr-only">{t("pickup")}</label>
+                  <label htmlFor="pickup" className="w-24 shrink-0 text-sm font-semibold">{t("pickup")}</label>
                   <select
                     id="pickup"
                     className="field"
@@ -184,7 +186,7 @@ function Client() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="h-3 w-3 shrink-0 rotate-45 rounded-[2px] bg-bad" aria-hidden="true" />
-                  <label htmlFor="dest" className="sr-only">{t("destination")}</label>
+                  <label htmlFor="dest" className="w-24 shrink-0 text-sm font-semibold">{t("destination")}</label>
                   <select id="dest" className="field" value={destId} onChange={(e) => setDestId(e.target.value as ZoneId)}>
                     {ZONES.map((z) => (
                       <option key={z.id} value={z.id}>{t(`zone_${z.id}`)}</option>

@@ -193,6 +193,7 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
             <div className="min-w-0 flex-1">
               <p className="text-xs text-ink/60">{t("client")}</p>
               <p className="truncate font-bold">{active.clientName}</p>
+              <p className="text-sm text-ink/70" dir="ltr">{active.clientPhone}</p>
             </div>
             <a className="btn btn-ghost btn-sm" href={tel(active.clientPhone)}>
               <PhoneIcon className="h-4 w-4" />
@@ -219,7 +220,14 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
             <div key={r.id} className="card grid gap-3 border-2 border-taxi p-4">
               <div className="flex items-center gap-3">
                 <Avatar name={r.clientName} />
-                <p className="min-w-0 flex-1 truncate font-bold">{r.clientName}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-bold">{r.clientName}</p>
+                  <p className="text-sm text-ink/70" dir="ltr">{r.clientPhone}</p>
+                </div>
+                <a className="btn btn-ghost btn-sm" href={tel(r.clientPhone)}>
+                  <PhoneIcon className="h-4 w-4" />
+                  {t("call")}
+                </a>
               </div>
               <RideLine ride={r} />
               <RouteLinks ride={r} />

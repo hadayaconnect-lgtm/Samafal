@@ -12,6 +12,9 @@ type Props = {
   focus: LatLng[];
   user?: LatLng | null;
   dest?: LatLng | null;
+  /** Textes affichés au-dessus des repères de départ et de destination. */
+  userLabel?: string;
+  destLabel?: string;
   drivers: MapDriver[];
   onSelect?: (id: string) => void;
   /** Hauteur (en px) masquée en bas par la feuille de réservation. */
@@ -21,7 +24,9 @@ type Props = {
 const CAR_SVG =
   '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11v6h-2v-1.5H7V17H5v-6z" fill="currentColor"/><circle cx="8" cy="13.4" r="1.2" fill="#0f7a43"/><circle cx="16" cy="13.4" r="1.2" fill="#0f7a43"/></svg>';
 
-export default function TaxiMap({ focus, user, dest, drivers, onSelect, bottomPad = 0 }: Props) {
+const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
+
+export default function TaxiMap({ focus, user, dest, userLabel, destLabel, drivers, onSelect, bottomPad = 0 }: Props) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layer = useRef<L.LayerGroup | null>(null);
@@ -67,15 +72,24 @@ export default function TaxiMap({ focus, user, dest, drivers, onSelect, bottomPa
     const g = layer.current;
     if (!g) return;
     g.clearLayers();
+    if (user && dest) {
+      L.polyline(
+        [
+          [user.lat, user.lng],
+          [dest.lat, dest.lng],
+        ],
+        { color: "#0f7a43", weight: 3, opacity: 0.7, dashArray: "6 8", interactive: false },
+      ).addTo(g);
+    }
     if (user) {
       L.marker([user.lat, user.lng], {
-        icon: L.divIcon({ className: "", html: '<div class="tx-user"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }),
+        icon: L.divIcon({ className: "", html: `<div class="tx-user"></div>${userLabel ? `<span class="tx-tag">${esc(userLabel)}</span>` : ""}`, iconSize: [16, 16], iconAnchor: [8, 8] }),
         interactive: false,
       }).addTo(g);
     }
     if (dest) {
       L.marker([dest.lat, dest.lng], {
-        icon: L.divIcon({ className: "", html: '<div class="tx-dest"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }),
+        icon: L.divIcon({ className: "", html: `<div class="tx-dest"></div>${destLabel ? `<span class="tx-tag">${esc(destLabel)}</span>` : ""}`, iconSize: [18, 18], iconAnchor: [9, 9] }),
         interactive: false,
       }).addTo(g);
     }
@@ -94,7 +108,7 @@ export default function TaxiMap({ focus, user, dest, drivers, onSelect, bottomPa
       marker.on("click", () => onSelectRef.current?.(d.id));
       marker.addTo(g);
     }
-  }, [drivers, user, dest]);
+  }, [drivers, user, dest, userLabel, destLabel]);
 
   return <div ref={el} dir="ltr" className="h-full w-full" />;
 }
