@@ -27,7 +27,7 @@ const plain = (p: LatLng): LatLng => ({ lat: p.lat, lng: p.lng });
 export default function ClientPage() {
   const { t } = useT();
   return (
-    <AuthGate title={t("client_title")} fullScreen>
+    <AuthGate title={t("client_title")} fullScreen methods={["email"]}>
       {() => <Client />}
     </AuthGate>
   );

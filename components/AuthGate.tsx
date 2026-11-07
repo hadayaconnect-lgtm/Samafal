@@ -19,11 +19,14 @@ export function AuthGate({
   title,
   role,
   fullScreen,
+  methods = ["phone", "email"],
   children,
 }: {
   title: string;
   role?: "union";
   fullScreen?: boolean;
+  /** Modes de connexion proposés (par défaut : SMS et e-mail). */
+  methods?: ("phone" | "email")[];
   children: (me: Profile) => ReactNode;
 }) {
   const { t } = useT();
@@ -31,7 +34,7 @@ export function AuthGate({
 
   let body: ReactNode;
   if (loading || (session && !profile)) body = <p className="p-4">{t("loading")}</p>;
-  else if (!session || !profile) body = <Login />;
+  else if (!session || !profile) body = <Login methods={methods} />;
   else if (!profile.full_name || !profile.phone) body = <NameStep profile={profile} onSave={saveName} />;
   else if (role === "union" && profile.role !== "union") {
     body = (
@@ -53,26 +56,28 @@ export function AuthGate({
   );
 }
 
-function Login() {
+function Login({ methods }: { methods: ("phone" | "email")[] }) {
   const { t } = useT();
-  const [mode, setMode] = useState<"phone" | "email">("phone");
+  const [mode, setMode] = useState<"phone" | "email">(methods[0] ?? "phone");
   return (
     <div className="grid gap-4">
-      <div className="grid grid-cols-2 gap-2" role="group" aria-label={t("auth_phone_title")}>
-        {(["phone", "email"] as const).map((m) => (
-          <button
-            key={m}
-            type="button"
-            aria-pressed={mode === m}
-            onClick={() => setMode(m)}
-            className={`btn btn-sm border ${
-              mode === m ? "border-green bg-green-soft text-green-dark ring-2 ring-green" : "border-line bg-white"
-            }`}
-          >
-            {t(m === "phone" ? "auth_tab_phone" : "auth_tab_email")}
-          </button>
-        ))}
-      </div>
+      {methods.length > 1 && (
+        <div className="grid grid-cols-2 gap-2" role="group" aria-label={t("auth_phone_title")}>
+          {methods.map((m) => (
+            <button
+              key={m}
+              type="button"
+              aria-pressed={mode === m}
+              onClick={() => setMode(m)}
+              className={`btn btn-sm border ${
+                mode === m ? "border-green bg-green-soft text-green-dark ring-2 ring-green" : "border-line bg-white"
+              }`}
+            >
+              {t(m === "phone" ? "auth_tab_phone" : "auth_tab_email")}
+            </button>
+          ))}
+        </div>
+      )}
       <CodeLogin key={mode} mode={mode} />
     </div>
   );

@@ -20,7 +20,7 @@ const tel = (p: string) => `tel:${p.replace(/\s/g, "")}`;
 export default function ChauffeurPage() {
   const { t } = useT();
   return (
-    <AuthGate title={t("driver_title")}>
+    <AuthGate title={t("driver_title")} methods={["phone"]}>
       {(me) => <Inner meId={me.id} />}
     </AuthGate>
   );
