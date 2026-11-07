@@ -45,6 +45,7 @@ export const fr = {
   inspect_save: "Enregistrer l'inspection",
   inspect_notes: "Remarques (facultatif)",
   inspect_title: "Inspection du véhicule",
+  price_edit_hint: "Touchez un prix pour le modifier (en FDJ). Il vaut dans les deux sens et s'applique tout de suite aux nouvelles réservations.",
   cancel: "Annuler",
   demo_note: "Version de démonstration : les données restent sur cet appareil.",
   reset_demo: "Réinitialiser la démonstration",

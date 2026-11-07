@@ -9,7 +9,7 @@ import { supabase } from "./supabase";
 import type { Comment, Driver, Payment, PayStatus, Ride, RideStatus, State } from "./types";
 import type { ZoneId } from "./zones";
 
-const EMPTY: State = { drivers: [], rides: [], comments: [], ready: false };
+const EMPTY: State = { drivers: [], rides: [], comments: [], prices: {}, ready: false };
 const listeners = new Set<() => void>();
 let cache: State = EMPTY;
 let started = false;
@@ -19,6 +19,7 @@ let wallets = new Map<string, { operator: string; number: string }>();
 let rawDrivers: Record<string, unknown>[] = [];
 let rawRides: Record<string, unknown>[] = [];
 let rawComments: Record<string, unknown>[] = [];
+let prices: Record<string, number> = {};
 const timers: Partial<Record<"drivers" | "rides", ReturnType<typeof setTimeout>>> = {};
 
 function emit() {
@@ -80,7 +81,7 @@ function rebuild() {
     text: c.comment as string,
     at: new Date(c.created_at as string).getTime(),
   }));
-  cache = { drivers, rides, comments, ready: true };
+  cache = { drivers, rides, comments, prices, ready: true };
   emit();
 }
 
@@ -91,6 +92,10 @@ async function loadDrivers() {
 async function loadWallets() {
   const { data } = await supabase.from("driver_wallets").select("*");
   if (data) wallets = new Map(data.map((w) => [w.driver_id as string, { operator: w.operator as string, number: w.number as string }]));
+}
+async function loadPrices() {
+  const { data } = await supabase.from("zone_prices").select("*");
+  if (data) prices = Object.fromEntries(data.map((x) => [`${x.zone_a}-${x.zone_b}`, x.price as number]));
 }
 async function loadComments() {
   const { data } = await supabase.from("ride_comments").select("*").order("created_at", { ascending: false }).limit(500);
@@ -103,7 +108,7 @@ async function loadRides() {
 
 export async function refreshAll() {
   if (!userId) return;
-  await Promise.all([loadDrivers(), loadWallets(), loadRides(), loadComments()]);
+  await Promise.all([loadDrivers(), loadWallets(), loadRides(), loadComments(), loadPrices()]);
   rebuild();
 }
 
@@ -130,6 +135,7 @@ function apply(session: Session | null) {
     rawDrivers = [];
     rawRides = [];
     rawComments = [];
+    prices = {};
     wallets = new Map();
     cache = EMPTY;
     emit();
@@ -152,6 +158,12 @@ function start() {
   setInterval(() => {
     if (document.visibilityState === "visible") void refreshAll();
   }, 20000);
+}
+
+/** Prix lu dans la base (null tant que non chargé). */
+export function livePrice(a: string, b: string): number | null {
+  const key = [a, b].sort().join("-");
+  return prices[key] ?? null;
 }
 
 export function getSnapshot(): State {
@@ -302,5 +314,14 @@ export async function inspectDriver(id: string, r: { car: number; clean: number;
   });
   fail(error);
   await loadDrivers();
+  rebuild();
+}
+
+/** L'administrateur change le prix d'un trajet entre deux zones (dans les deux sens). */
+export async function setPrice(a: string, b: string, price: number) {
+  const [za, zb] = [a, b].sort();
+  const { error } = await supabase.from("zone_prices").update({ price }).eq("zone_a", za).eq("zone_b", zb);
+  fail(error);
+  await loadPrices();
   rebuild();
 }

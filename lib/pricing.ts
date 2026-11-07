@@ -1,7 +1,9 @@
+import { livePrice } from "./store";
 import { ZONES, type ZoneId } from "./zones";
 
 /**
- * TARIFS PROVISOIRES (en FDJ) entre zones, à valider avec le syndicat.
+ * TARIFS DE SECOURS (en FDJ), utilisés seulement si la base n'a pas encore répondu.
+ * Les vrais prix sont dans la table zone_prices et se modifient dans l'espace Administration.
  * Le prix est symétrique : A vers B = B vers A.
  */
 const SAME_ZONE = 300;
@@ -31,6 +33,8 @@ const PAIRS: Record<string, number> = {
 };
 
 export function zonePrice(a: ZoneId, b: ZoneId): number {
+  const live = livePrice(a, b);
+  if (live !== null) return live;
   if (a === b) return SAME_ZONE;
   return PAIRS[`${a}-${b}`] ?? PAIRS[`${b}-${a}`] ?? SAME_ZONE;
 }

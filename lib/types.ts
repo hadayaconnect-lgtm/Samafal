@@ -54,6 +54,8 @@ export type State = {
   drivers: Driver[];
   rides: Ride[];
   comments: Comment[];
+  /** Prix en FDJ entre zones, clé « zoneA-zoneB » (ordre alphabétique). Vide tant que la base n'est pas lue. */
+  prices: Record<string, number>;
   /** Faux tant que la première lecture de la base n'est pas terminée. */
   ready: boolean;
 };
