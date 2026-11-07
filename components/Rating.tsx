@@ -27,7 +27,7 @@ export function RatingInput({ label, value, onChange }: { label: string; value: 
   );
 }
 
-/** Note du syndicat en petit : « ★ 4,3 · Inspecté » ou « Non inspecté ». */
+/** Note de l'inspection en petit : « ★ 4,3 · Inspecté » ou « Non inspecté ». */
 export function RatingBadge({ rating, inspected }: { rating: number; inspected: boolean }) {
   const { t } = useT();
   if (!inspected) return <span className="chip">{t("rate_new")}</span>;

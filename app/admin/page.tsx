@@ -47,7 +47,7 @@ const STATUS_KEY = {
 
 type Filter = "all" | "pending" | "online" | "suspended";
 
-export default function SyndicatPage() {
+export default function AdminPage() {
   const { t } = useT();
   return (
     <AuthGate title={t("union_title")} role="union">

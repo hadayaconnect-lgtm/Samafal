@@ -20,7 +20,7 @@ type Role = {
 const ROLES: Role[] = [
   { href: "/client", title: "home_client", sub: "home_client_sub", Icon: PinIcon, main: true },
   { href: "/chauffeur", title: "home_driver", sub: "home_driver_sub", Icon: WheelIcon },
-  { href: "/syndicat", title: "home_union", sub: "home_union_sub", Icon: ShieldIcon },
+  { href: "/admin", title: "home_union", sub: "home_union_sub", Icon: ShieldIcon },
 ];
 
 export default function Home() {
