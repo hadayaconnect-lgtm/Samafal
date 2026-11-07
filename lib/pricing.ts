@@ -6,37 +6,39 @@ import { ZONES, type ZoneId } from "./zones";
  * Les vrais prix sont dans la table zone_prices et se modifient dans l'espace Administration.
  * Le prix est symétrique : A vers B = B vers A.
  */
-const SAME_ZONE = 300;
+const MIN_PRICE = 500;
 
 const PAIRS: Record<string, number> = {
-  "centre-serpent": 400,
-  "centre-haramous": 600,
-  "centre-port": 500,
-  "centre-aeroport": 1000,
-  "centre-balbala": 800,
-  "centre-gabode": 500,
-  "serpent-haramous": 400,
-  "serpent-port": 500,
-  "serpent-aeroport": 1100,
-  "serpent-balbala": 900,
-  "serpent-gabode": 600,
-  "haramous-port": 700,
-  "haramous-aeroport": 1200,
-  "haramous-balbala": 1000,
-  "haramous-gabode": 800,
-  "port-aeroport": 1100,
-  "port-balbala": 800,
-  "port-gabode": 600,
-  "aeroport-balbala": 800,
-  "aeroport-gabode": 700,
-  "balbala-gabode": 600,
+  "aeroport-balbala": 700,
+  "aeroport-centre": 1000,
+  "aeroport-nagad": 700,
+  "aeroport-peltier": 1000,
+  "aeroport-port": 1000,
+  "aeroport-serpent": 1000,
+  "ambouli-balbala": 700,
+  "ambouli-nagad": 700,
+  "ambouli-peltier": 1000,
+  "balbala-centre": 1000,
+  "balbala-haramous": 1000,
+  "balbala-nagad": 700,
+  "balbala-peltier": 1000,
+  "balbala-port": 1000,
+  "balbala-quartier7": 700,
+  "balbala-serpent": 1000,
+  "centre-nagad": 1000,
+  "haramous-nagad": 1000,
+  "nagad-peltier": 1000,
+  "nagad-port": 1000,
+  "nagad-quartier7": 700,
+  "nagad-serpent": 1000,
+  "peltier-quartier7": 1000,
 };
 
 export function zonePrice(a: ZoneId, b: ZoneId): number {
   const live = livePrice(a, b);
   if (live !== null) return live;
-  if (a === b) return SAME_ZONE;
-  return PAIRS[`${a}-${b}`] ?? PAIRS[`${b}-${a}`] ?? SAME_ZONE;
+  if (a === b) return MIN_PRICE;
+  return PAIRS[`${a}-${b}`] ?? PAIRS[`${b}-${a}`] ?? MIN_PRICE;
 }
 
 export const fmtNum = (n: number) => n.toLocaleString("fr-FR");

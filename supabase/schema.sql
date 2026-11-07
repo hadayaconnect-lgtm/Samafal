@@ -92,32 +92,76 @@ create policy zone_prices_write on public.zone_prices for all to authenticated
 grant select, insert, update, delete on public.zones to authenticated;
 grant select, insert, update, delete on public.zone_prices to authenticated;
 
--- Zones de départ (coordonnées approximatives, à corriger avec le syndicat)
+-- Zones de départ (repères Google Maps)
 insert into public.zones (id, name_fr, lat, lng) values
-  ('centre',   'Centre-ville',       11.5886, 43.1450),
-  ('serpent',  'Plateau du Serpent', 11.5985, 43.1520),
-  ('haramous', 'Haramous',           11.6075, 43.1620),
-  ('port',     'Port',               11.6010, 43.1370),
-  ('aeroport', 'Aéroport Ambouli',   11.5473, 43.1595),
-  ('balbala',  'Balbala',            11.5320, 43.1000),
-  ('gabode',   'Gabode',             11.5730, 43.1250);
+  ('centre', 'Centre-ville', 11.5911, 43.1462),
+  ('serpent', 'Plateau du Serpent', 11.6056, 43.1549),
+  ('peltier', 'Hôpital Peltier', 11.6083, 43.1532),
+  ('haramous', 'Haramous', 11.5638, 43.1661),
+  ('port', 'Port', 11.6066, 43.1396),
+  ('ambouli', 'Ambouli', 11.5589, 43.1464),
+  ('quartier7', 'Quartiers 4 à 7', 11.5764, 43.1411),
+  ('aeroport', 'Aéroport', 11.5521, 43.1497),
+  ('balbala', 'Balbala', 11.5666, 43.1036),
+  ('nagad', 'Cité Nagad', 11.517, 43.1398);
 
--- Prix provisoires en FDJ (symétriques), à valider avec le syndicat
-insert into public.zone_prices (zone_a, zone_b, price)
-select least(a, b), greatest(a, b), p
-from (values
-  ('centre','centre',300), ('serpent','serpent',300), ('haramous','haramous',300),
-  ('port','port',300), ('aeroport','aeroport',300), ('balbala','balbala',300), ('gabode','gabode',300),
-  ('centre','serpent',400), ('centre','haramous',600), ('centre','port',500),
-  ('centre','aeroport',1000), ('centre','balbala',800), ('centre','gabode',500),
-  ('serpent','haramous',400), ('serpent','port',500), ('serpent','aeroport',1100),
-  ('serpent','balbala',900), ('serpent','gabode',600),
-  ('haramous','port',700), ('haramous','aeroport',1200), ('haramous','balbala',1000),
-  ('haramous','gabode',800),
-  ('port','aeroport',1100), ('port','balbala',800), ('port','gabode',600),
-  ('aeroport','balbala',800), ('aeroport','gabode',700),
-  ('balbala','gabode',600)
-) as v (a, b, p);
+-- Prix provisoires en FDJ (symétriques, minimum 500), à ajuster dans /admin
+insert into public.zone_prices (zone_a, zone_b, price) values
+  ('aeroport','aeroport',500),
+  ('aeroport','ambouli',500),
+  ('aeroport','balbala',700),
+  ('aeroport','centre',1000),
+  ('aeroport','haramous',500),
+  ('aeroport','nagad',700),
+  ('aeroport','peltier',1000),
+  ('aeroport','port',1000),
+  ('aeroport','quartier7',500),
+  ('aeroport','serpent',1000),
+  ('ambouli','ambouli',500),
+  ('ambouli','balbala',700),
+  ('ambouli','centre',500),
+  ('ambouli','haramous',500),
+  ('ambouli','nagad',700),
+  ('ambouli','peltier',1000),
+  ('ambouli','port',500),
+  ('ambouli','quartier7',500),
+  ('ambouli','serpent',500),
+  ('balbala','balbala',500),
+  ('balbala','centre',1000),
+  ('balbala','haramous',1000),
+  ('balbala','nagad',700),
+  ('balbala','peltier',1000),
+  ('balbala','port',1000),
+  ('balbala','quartier7',700),
+  ('balbala','serpent',1000),
+  ('centre','centre',500),
+  ('centre','haramous',500),
+  ('centre','nagad',1000),
+  ('centre','peltier',500),
+  ('centre','port',500),
+  ('centre','quartier7',500),
+  ('centre','serpent',500),
+  ('haramous','haramous',500),
+  ('haramous','nagad',1000),
+  ('haramous','peltier',500),
+  ('haramous','port',500),
+  ('haramous','quartier7',500),
+  ('haramous','serpent',500),
+  ('nagad','nagad',500),
+  ('nagad','peltier',1000),
+  ('nagad','port',1000),
+  ('nagad','quartier7',700),
+  ('nagad','serpent',1000),
+  ('peltier','peltier',500),
+  ('peltier','port',500),
+  ('peltier','quartier7',1000),
+  ('peltier','serpent',500),
+  ('port','port',500),
+  ('port','quartier7',500),
+  ('port','serpent',500),
+  ('quartier7','quartier7',500),
+  ('quartier7','serpent',500),
+  ('serpent','serpent',500);
 
 -- ---------------------------------------------------------------------
 -- 3. Chauffeurs
