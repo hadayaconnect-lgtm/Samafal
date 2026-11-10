@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.hadayaconnect.taxibell",
+    "sha256_cert_fingerprints": ["E7:FB:DE:5D:48:31:DE:1F:4C:9A:9E:CE:C3:19:0E:63:25:42:C2:FF:AE:AA:34:AD:59:50:11:58:F4:CB:AD:B7"]
+  }
+}]
