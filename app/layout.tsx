@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { LangProvider } from "@/components/LangProvider";
 
 export const metadata: Metadata = {
-  title: "Samafal",
+  title: "TaxiBell",
   description: "Le taxi le plus proche, en un instant. Djibouti.",
 };
 

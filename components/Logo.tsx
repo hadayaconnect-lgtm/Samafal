@@ -1,7 +1,7 @@
-/** Logo Samafal : un taxi vu de face, avec son enseigne de toit. */
+/** Logo TaxiBell : un taxi vu de face, avec son enseigne de toit. */
 export function LogoMark({ size = 40 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" role="img" aria-label="Samafal">
+    <svg width={size} height={size} viewBox="0 0 48 48" role="img" aria-label="TaxiBell">
       <rect width="48" height="48" rx="12" fill="#0f7a43" />
       <rect x="19" y="8" width="10" height="5" rx="1.5" fill="#f2b01e" />
       <path

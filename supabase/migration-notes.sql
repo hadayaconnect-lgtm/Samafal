@@ -1,5 +1,5 @@
 -- =====================================================================
--- Samafal : notes des taxis
+-- TaxiBell : notes des taxis
 --   - La NOTE (sur 5) vient uniquement de l'inspection du syndicat.
 --   - Les clients laissent seulement un COMMENTAIRE, visible de tous.
 -- À exécuter dans Supabase > SQL Editor, après schema.sql.

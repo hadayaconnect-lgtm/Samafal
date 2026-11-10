@@ -6,5 +6,5 @@ import type { Key } from "./fr";
  * de fr.ts ici, par exemple : home_client: "…",
  */
 export const aa: Partial<Record<Key, string>> = {
-  app_name: "Samafal",
+  app_name: "TaxiBell",
 };

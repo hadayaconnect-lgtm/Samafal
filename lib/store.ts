@@ -1,5 +1,5 @@
 /**
- * Couche de données de Samafal, branchée sur Supabase.
+ * Couche de données de TaxiBell, branchée sur Supabase.
  * Les pages lisent l'état partagé (useApp) et appellent ces fonctions.
  * Les règles de sécurité (qui voit quoi, qui peut faire quoi, prix imposé)
  * sont appliquées par la base de données, pas par ce fichier.

@@ -1,4 +1,4 @@
-# Samafal
+# TaxiBell
 
 Application de taxis pour Djibouti : le client voit les taxis les plus proches, réserve, et paie en espèces ou par mobile money. Les chauffeurs sont validés par l'administrateur de l'application.
 

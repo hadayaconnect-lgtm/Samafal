@@ -2,7 +2,7 @@ import type { Key } from "./fr";
 
 /** Somali : traduction à faire relire par un locuteur natif avant le lancement. */
 export const so: Partial<Record<Key, string>> = {
-  app_name: "Samafal",
+  app_name: "TaxiBell",
   tagline: "Taksiga kuugu dhow, isla markiiba.",
   home_client: "Waxaan raadinayaa taksi",
   home_client_sub: "Arag taksiyada u dhow oo buug",

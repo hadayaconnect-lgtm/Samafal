@@ -1,6 +1,6 @@
 /** Français : langue de référence. Toute nouvelle clé s'ajoute ici d'abord. */
 export const fr = {
-  app_name: "Samafal",
+  app_name: "TaxiBell",
   tagline: "Le taxi le plus proche, en un instant.",
   home_client: "Je cherche un taxi",
   home_client_sub: "Voir les taxis proches et réserver",
@@ -23,7 +23,7 @@ export const fr = {
   auth_tab_phone: "Par SMS",
   auth_tab_email: "Par e-mail",
   auth_email_label: "Votre adresse e-mail",
-  auth_email_hint: "Un code à 6 chiffres vous sera envoyé par e-mail. Pensez à vérifier vos spams.",
+  auth_email_hint: "Un code à 6 chiffres vous sera envoyé par e-mail (vérifiez aussi vos spams).",
   auth_bad_email: "Adresse e-mail invalide.",
   auth_code_label_email: "Code reçu par e-mail",
   auth_change_email: "Changer d'adresse",
@@ -32,6 +32,9 @@ export const fr = {
   auth_need_name: "Indiquez votre nom.",
   auth_have_account: "J'ai déjà un compte",
   auth_first_time: "Première connexion",
+  auth_welcome: "Bienvenue",
+  auth_welcome_sub: "Réservez un taxi vérifié à Djibouti. Renseignez vos coordonnées pour que le chauffeur puisse vous joindre.",
+  auth_name_placeholder: "Ex. Hodan Ahmed",
   auth_logout: "Se déconnecter",
   auth_not_union: "Ce compte n'a pas l'accès administration.",
   auth_not_union_help: "Demandez au responsable de l'application de vous donner l'accès.",

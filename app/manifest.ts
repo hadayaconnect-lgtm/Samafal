@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Samafal",
-    short_name: "Samafal",
+    name: "TaxiBell",
+    short_name: "TaxiBell",
     description: "Le taxi le plus proche, en un instant.",
     start_url: "/",
     display: "standalone",

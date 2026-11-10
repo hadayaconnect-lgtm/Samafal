@@ -2,7 +2,7 @@ import type { Key } from "./fr";
 
 /** Arabe : traduction à faire relire par un locuteur natif avant le lancement. */
 export const ar: Partial<Record<Key, string>> = {
-  app_name: "سمفل",
+  app_name: "تاكسي بيل",
   tagline: "أقرب تاكسي إليك في لحظات.",
   home_client: "أبحث عن تاكسي",
   home_client_sub: "شاهد سيارات الأجرة القريبة واحجز",
