@@ -128,15 +128,79 @@ function CodeLogin({ mode }: { mode: "phone" | "email" }) {
     }
   }
 
+  const idOk = isEmail ? validEmail(input) !== null : normalizePhone(input) !== null;
+  const detailsOk = !askDetails || (name.trim().length >= 2 && normalizePhone(contact) !== null);
+
+  const phoneField = (id: string, value: string, set: (v: string) => void) => (
+    <div className="flex items-center gap-2" dir="ltr">
+      <span className="rounded-xl bg-mist px-3 py-3 font-semibold">+253</span>
+      <input
+        id={id}
+        className="field"
+        inputMode="tel"
+        autoComplete="tel-national"
+        placeholder="77 00 00 00"
+        value={value}
+        onChange={(e) => set(e.target.value)}
+      />
+    </div>
+  );
+
   return target === null ? (
     <form
-      className="card grid gap-3 p-5"
+      className="card grid gap-4 p-5"
       onSubmit={(e) => {
         e.preventDefault();
         void send();
       }}
     >
-      <h2 className="text-lg font-bold">{t("auth_phone_title")}</h2>
+      <div>
+        <h2 className="text-xl font-bold">{t(isEmail ? "auth_welcome" : "auth_phone_title")}</h2>
+        <p className="mt-1 text-sm text-ink/70">{t(isEmail ? "auth_welcome_sub" : "auth_phone_hint")}</p>
+      </div>
+
+      {isEmail && (
+        <div className="grid grid-cols-2 gap-1 rounded-2xl bg-mist p-1" role="group">
+          {([true, false] as const).map((v) => (
+            <button
+              key={String(v)}
+              type="button"
+              aria-pressed={isNew === v}
+              onClick={() => {
+                setIsNew(v);
+                setError(null);
+              }}
+              className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+                isNew === v ? "bg-white text-green-dark shadow" : "text-ink/60"
+              }`}
+            >
+              {t(v ? "auth_first_time" : "auth_have_account")}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {askDetails && (
+        <>
+          <div>
+            <label className="label" htmlFor="login-name">{t("your_name")}</label>
+            <input
+              id="login-name"
+              className="field"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoComplete="name"
+              placeholder={t("auth_name_placeholder")}
+            />
+          </div>
+          <div>
+            <label className="label" htmlFor="login-contact">{t("auth_contact_phone")}</label>
+            {phoneField("login-contact", contact, setContact)}
+            <p className="mt-1 text-xs text-ink/60">{t("auth_contact_phone_hint")}</p>
+          </div>
+        </>
+      )}
+
       <div>
         <label className="label" htmlFor="login-id">{t(isEmail ? "auth_email_label" : "auth_phone_label")}</label>
         {isEmail ? (
@@ -152,61 +216,14 @@ function CodeLogin({ mode }: { mode: "phone" | "email" }) {
             dir="ltr"
           />
         ) : (
-          <div className="flex items-center gap-2" dir="ltr">
-            <span className="rounded-xl bg-mist px-3 py-3 font-semibold">+253</span>
-            <input
-              id="login-id"
-              className="field"
-              inputMode="tel"
-              autoComplete="tel-national"
-              placeholder="77 00 00 00"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-            />
-          </div>
+          phoneField("login-id", input, setInput)
         )}
-        <p className="mt-1 text-xs text-ink/60">{t(isEmail ? "auth_email_hint" : "auth_phone_hint")}</p>
+        {isEmail && <p className="mt-1 text-xs text-ink/60">{t("auth_email_hint")}</p>}
       </div>
-      {isEmail && (
-        <>
-          {isNew && (
-            <>
-              <div>
-                <label className="label" htmlFor="login-name">{t("your_name")}</label>
-                <input
-                  id="login-name"
-                  className="field"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  autoComplete="name"
-                />
-              </div>
-              <div>
-                <label className="label" htmlFor="login-contact">{t("auth_contact_phone")}</label>
-                <div className="flex items-center gap-2" dir="ltr">
-                  <span className="rounded-xl bg-mist px-3 py-3 font-semibold">+253</span>
-                  <input
-                    id="login-contact"
-                    className="field"
-                    inputMode="tel"
-                    autoComplete="tel-national"
-                    placeholder="77 00 00 00"
-                    value={contact}
-                    onChange={(e) => setContact(e.target.value)}
-                  />
-                </div>
-                <p className="mt-1 text-xs text-ink/60">{t("auth_contact_phone_hint")}</p>
-              </div>
-            </>
-          )}
-          <button type="button" className="btn btn-ghost btn-sm w-fit" onClick={() => setIsNew((v) => !v)}>
-            {t(isNew ? "auth_have_account" : "auth_first_time")}
-          </button>
-        </>
-      )}
-      {error && <p className="text-sm text-bad">{error}</p>}
-      <button type="submit" className="btn btn-primary" disabled={busy}>
-        {t("auth_send_code")}
+
+      {error && <p className="rounded-xl bg-bad/10 p-3 text-sm text-bad" role="alert">{error}</p>}
+      <button type="submit" className="btn btn-primary" disabled={busy || !idOk || !detailsOk}>
+        {busy ? t("loading") : t("auth_send_code")}
       </button>
     </form>
   ) : (
