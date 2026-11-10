@@ -60,6 +60,19 @@ export default function Privacy() {
           écrivant{CONTACT_EMAIL ? ` à ${CONTACT_EMAIL}` : ""}.
         </p>
       </section>
+
+      <section id="suppression" className="grid gap-2">
+        <h2 className="text-lg font-bold">Supprimer mon compte et mes données</h2>
+        <p>
+          Pour supprimer votre compte TaxiBell et les données associées, envoyez un e-mail à {CONTACT_EMAIL} avec pour objet
+          « Suppression de compte TaxiBell », depuis l’adresse e-mail de votre compte ou en indiquant le numéro de téléphone
+          utilisé pour vous connecter. Nous traitons la demande sous 30 jours.
+        </p>
+        <ul className="list-disc ps-5">
+          <li>Supprimés : nom, numéro de téléphone, adresse e-mail, position, informations du véhicule et du portefeuille mobile, commentaires.</li>
+          <li>Conservés quelques mois si la loi l’exige : l’historique des courses, sans lien avec votre identité lorsque c’est possible.</li>
+        </ul>
+      </section>
     </main>
   );
 }
