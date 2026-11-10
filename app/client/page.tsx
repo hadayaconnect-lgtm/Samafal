@@ -26,8 +26,13 @@ const plain = (p: LatLng): LatLng => ({ lat: p.lat, lng: p.lng });
 
 export default function ClientPage() {
   const { t } = useT();
+  // Accès de démonstration pour les examinateurs (Google Play) : /client?demo=1 ajoute la connexion par SMS (numéros de test).
+  const [demo, setDemo] = useState(false);
+  useEffect(() => {
+    setDemo(new URLSearchParams(window.location.search).has("demo"));
+  }, []);
   return (
-    <AuthGate title={t("client_title")} fullScreen methods={["email"]}>
+    <AuthGate title={t("client_title")} fullScreen methods={demo ? ["email", "phone"] : ["email"]}>
       {() => <Client />}
     </AuthGate>
   );

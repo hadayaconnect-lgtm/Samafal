@@ -5,7 +5,7 @@ Prérequis : Node 18+, Java 17 (Bubblewrap propose de les installer).
 ```
 npm i -g @bubblewrap/cli
 mkdir taxibell-android && cd taxibell-android
-bubblewrap init --manifest=https://samafal.vercel.app/manifest.webmanifest
+bubblewrap init --manifest=https://taxibell.vercel.app/manifest.webmanifest
 bubblewrap build
 ```
 Résultat : `app-release-bundle.aab` (à envoyer à Google Play).
@@ -19,7 +19,7 @@ Dans le projet, crée `public/.well-known/assetlinks.json` :
   "target":{"namespace":"android_app","package_name":"com.hadayaconnect.taxibell",
   "sha256_cert_fingerprints":["COLLE_ICI_LE_SHA256"]}}]
 ```
-Puis git push. Vérifie : https://samafal.vercel.app/.well-known/assetlinks.json
+Puis git push. Vérifie : https://taxibell.vercel.app/.well-known/assetlinks.json
 
 ## 3. Fiche Play Console
 - Titre : TaxiBell – Taxi Djibouti
@@ -27,7 +27,7 @@ Puis git push. Vérifie : https://samafal.vercel.app/.well-known/assetlinks.json
 - Icône 512x512 : public/icon-512.png
 - Image de présentation 1024x500 : playstore/feature-graphic-1024x500.png
 - Captures d'écran : minimum 2 (téléphone), prises sur l'app
-- Politique de confidentialité : https://samafal.vercel.app/confidentialite
+- Politique de confidentialité : https://taxibell.vercel.app/confidentialite
 - Catégorie : Cartes et navigation (ou Transports)
 - Sécurité des données : collecte nom, téléphone, e-mail, position (précise) ; chiffrées en transit ; l'utilisateur peut demander la suppression.
 - Compte de test pour Google : numéro 25377000001, code 123456 (chauffeur)

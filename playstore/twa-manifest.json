@@ -1,6 +1,6 @@
 {
   "packageId": "com.hadayaconnect.taxibell",
-  "host": "samafal.vercel.app",
+  "host": "taxibell.vercel.app",
   "name": "TaxiBell – Taxi Djibouti",
   "launcherName": "TaxiBell",
   "display": "standalone",
@@ -8,8 +8,8 @@
   "navigationColor": "#0d2b3e",
   "backgroundColor": "#edf3f6",
   "startUrl": "/",
-  "iconUrl": "https://samafal.vercel.app/icon-512.png",
-  "maskableIconUrl": "https://samafal.vercel.app/icon-512.png",
+  "iconUrl": "https://taxibell.vercel.app/icon-512.png",
+  "maskableIconUrl": "https://taxibell.vercel.app/icon-512.png",
   "appVersion": "1.0.0",
   "appVersionCode": 1,
   "enableNotifications": true,
