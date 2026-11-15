@@ -265,7 +265,7 @@ create table public.rides (
   payment text not null check (payment in ('cash', 'mobile')),
   pay_status text not null default 'pending' check (pay_status in ('pending', 'claimed', 'confirmed')),
   status text not null default 'requested'
-    check (status in ('requested', 'accepted', 'completed', 'declined', 'cancelled')),
+    check (status in ('requested', 'accepted', 'arrived', 'started', 'completed', 'declined', 'cancelled')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -328,7 +328,7 @@ create policy wallets_select on public.driver_wallets
       select 1 from public.rides r
       where r.driver_id = driver_wallets.driver_id
         and r.client_id = auth.uid()
-        and r.status in ('accepted', 'completed')
+        and r.status in ('accepted', 'arrived', 'started', 'completed')
     )
   );
 create policy wallets_insert on public.driver_wallets
@@ -337,9 +337,10 @@ create policy wallets_update on public.driver_wallets
   for update to authenticated using (driver_id = auth.uid()) with check (driver_id = auth.uid());
 
 -- Actions possibles sur une course :
---   accept / decline / complete / confirm_paid : par le chauffeur
---   cancel : par le client ou le chauffeur
+--   accept / decline / arrive / start / complete / confirm_paid : par le chauffeur
+--   cancel : par le client ou le chauffeur (avant le depart de la course)
 --   claim_paid : par le client (paiement mobile money annoncé)
+-- Cycle : requested -> accepted -> arrived -> started -> completed
 create or replace function public.ride_action(p_ride uuid, p_action text)
 returns void
 language plpgsql
@@ -368,8 +369,20 @@ begin
     end if;
     update public.rides set status = 'declined', updated_at = now() where id = r.id;
 
-  elsif p_action = 'complete' then
+  elsif p_action = 'arrive' then
     if uid is distinct from r.driver_id or r.status <> 'accepted' then
+      raise exception 'Action refusée';
+    end if;
+    update public.rides set status = 'arrived', updated_at = now() where id = r.id;
+
+  elsif p_action = 'start' then
+    if uid is distinct from r.driver_id or r.status not in ('accepted', 'arrived') then
+      raise exception 'Action refusée';
+    end if;
+    update public.rides set status = 'started', updated_at = now() where id = r.id;
+
+  elsif p_action = 'complete' then
+    if uid is distinct from r.driver_id or r.status not in ('accepted', 'arrived', 'started') then
       raise exception 'Action refusée';
     end if;
     update public.rides
@@ -380,11 +393,11 @@ begin
     update public.drivers set available = true, rides_count = rides_count + 1 where id = r.driver_id;
 
   elsif p_action = 'cancel' then
-    if uid not in (r.client_id, r.driver_id) or r.status not in ('requested', 'accepted') then
+    if uid not in (r.client_id, r.driver_id) or r.status not in ('requested', 'accepted', 'arrived') then
       raise exception 'Action refusée';
     end if;
     update public.rides set status = 'cancelled', updated_at = now() where id = r.id;
-    if r.status = 'accepted' then
+    if r.status in ('accepted', 'arrived') then
       update public.drivers set available = true where id = r.driver_id;
     end if;
 

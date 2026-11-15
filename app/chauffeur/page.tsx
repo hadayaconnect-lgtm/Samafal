@@ -96,14 +96,15 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
   const canWork = driver.verified && !driver.suspended;
   const mine = app.rides.filter((r) => r.driverId === driver.id);
   const requests = mine.filter((r) => r.status === "requested");
-  const active = mine.find((r) => r.status === "accepted");
+  const active = mine.find((r) => r.status === "accepted" || r.status === "arrived" || r.status === "started");
   const doneToday = mine.filter((r) => r.status === "completed" && isToday(r.updatedAt));
   const earnings = doneToday.reduce((sum, r) => sum + r.price, 0);
   const toConfirm = mine.filter((r) => r.status === "completed" && r.payment === "mobile" && r.payStatus !== "confirmed");
 
-  // Partage de position GPS tant que le chauffeur est disponible.
+  // Partage de position GPS tant que le chauffeur est disponible ou en course.
+  const tracking = driver.available || Boolean(active);
   useEffect(() => {
-    if (!driver.available || !("geolocation" in navigator)) return;
+    if (!tracking || !("geolocation" in navigator)) return;
     let last = 0;
     const watch = navigator.geolocation.watchPosition(
       (p) => {
@@ -116,7 +117,7 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
       { enableHighAccuracy: true, maximumAge: 5000 },
     );
     return () => navigator.geolocation.clearWatch(watch);
-  }, [driver.id, driver.available]);
+  }, [driver.id, tracking]);
 
   function setZone(id: ZoneId) {
     const c = zoneCoords(id);
@@ -202,9 +203,29 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
           </div>
           <RideLine ride={active} />
           <RouteLinks ride={active} />
-          <button type="button" className="btn btn-primary" onClick={() => act(setRideStatus(active.id, "completed"))}>
-            {t("finish_ride")}
-          </button>
+          <span className="chip chip-ok w-fit">
+            {t(active.status === "started" ? "ride_started" : active.status === "arrived" ? "ride_arrived" : "ride_accepted")}
+          </span>
+          {active.status === "accepted" && (
+            <button type="button" className="btn btn-taxi" onClick={() => act(setRideStatus(active.id, "arrived"))}>
+              {t("arrived_btn")}
+            </button>
+          )}
+          {active.status === "arrived" && (
+            <button type="button" className="btn btn-taxi" onClick={() => act(setRideStatus(active.id, "started"))}>
+              {t("start_btn")}
+            </button>
+          )}
+          {active.status === "started" && (
+            <button type="button" className="btn btn-primary" onClick={() => act(setRideStatus(active.id, "completed"))}>
+              {t("finish_ride")}
+            </button>
+          )}
+          {active.status !== "started" && (
+            <button type="button" className="btn btn-danger btn-sm" onClick={() => act(setRideStatus(active.id, "cancelled"))}>
+              {t("cancel_ride")}
+            </button>
+          )}
         </section>
       )}
 

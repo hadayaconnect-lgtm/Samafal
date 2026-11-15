@@ -193,6 +193,15 @@ export const fr = {
   how_1: "Vous proposez votre prix, dès 500 FDJ.",
   how_2: "Le chauffeur accepte ou refuse votre prix.",
   how_3: "Il vient vous chercher. Paiement en espèces ou par mobile.",
+  ride_arrived: "Arrivé",
+  ride_started: "En course",
+  arrived_btn: "Je suis arrivé",
+  start_btn: "Démarrer la course",
+  cancel_ride: "Annuler la course",
+  arrived_title: "{name} est arrivé",
+  arrived_sub: "Votre chauffeur vous attend : {vehicle} · {plate}",
+  started_title: "Course en cours",
+  started_sub: "Bonne route avec {name} !",
 } as const;
 
 export type Key = keyof typeof fr;

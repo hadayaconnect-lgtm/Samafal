@@ -20,7 +20,7 @@ export type Driver = {
   inspection: { car: number; clean: number; ac: number; at: number } | null;
 };
 
-export type RideStatus = "requested" | "accepted" | "completed" | "declined" | "cancelled";
+export type RideStatus = "requested" | "accepted" | "arrived" | "started" | "completed" | "declined" | "cancelled";
 export type Payment = "cash" | "mobile";
 export type PayStatus = "pending" | "claimed" | "confirmed";
 

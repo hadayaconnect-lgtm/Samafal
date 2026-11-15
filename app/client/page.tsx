@@ -330,14 +330,14 @@ function Client() {
 
 function Tracker({ status }: { status: Ride["status"] }) {
   const { t } = useT();
-  const steps = ["requested", "accepted", "completed"] as const;
-  const idx = status === "completed" ? 2 : status === "accepted" ? 1 : 0;
+  const steps = ["requested", "accepted", "arrived", "started", "completed"] as const;
+  const idx = Math.max(0, steps.indexOf(status as (typeof steps)[number]));
   return (
-    <ol className="grid grid-cols-3 gap-2">
+    <ol className="grid grid-cols-5 gap-1.5">
       {steps.map((s, i) => (
         <li key={s} className="grid gap-1">
           <span className={`h-1.5 rounded-full ${i <= idx ? "bg-green" : "bg-line"}`} />
-          <span className={`text-xs font-semibold ${i <= idx ? "text-green-dark" : "text-ink/50"}`}>
+          <span className={`text-[11px] font-semibold leading-tight ${i <= idx ? "text-green-dark" : "text-ink/50"}`}>
             {t(`ride_${s}`)}
           </span>
         </li>
@@ -402,21 +402,31 @@ function RidePanel({ ride, driver, onDone }: { ride: Ride; driver: Driver; onDon
     );
   }
 
-  if (ride.status === "accepted") {
+  if (ride.status === "accepted" || ride.status === "arrived" || ride.status === "started") {
     const eta = etaMin(roadKm(driver, ride.pickup));
+    const title =
+      ride.status === "arrived"
+        ? t("arrived_title", { name: driver.name })
+        : ride.status === "started"
+          ? t("started_title")
+          : t("accepted_title", { name: driver.name });
+    const sub =
+      ride.status === "arrived"
+        ? t("arrived_sub", { vehicle: driver.vehicle, plate: driver.plate })
+        : ride.status === "started"
+          ? t("started_sub", { name: driver.name })
+          : t("accepted_sub", { min: eta, vehicle: driver.vehicle, plate: driver.plate });
     return (
       <div className="grid gap-4 p-4">
         <Tracker status={ride.status} />
         {header}
         <div>
-          <h2 className="text-lg font-bold">{t("accepted_title", { name: driver.name })}</h2>
-          <p className="text-sm text-ink/70" dir="auto">
-            {t("accepted_sub", { min: eta, vehicle: driver.vehicle, plate: driver.plate })}
-          </p>
+          <h2 className="text-lg font-bold">{title}</h2>
+          <p className="text-sm text-ink/70" dir="auto">{sub}</p>
         </div>
         {trip}
         <p className="text-sm text-ink/70">{t(ride.payment === "cash" ? "pay_cash" : "pay_mobile")}</p>
-        {cancel}
+        {ride.status !== "started" && cancel}
       </div>
     );
   }

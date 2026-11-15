@@ -263,6 +263,8 @@ export async function requestRide(input: {
 
 const ACTION: Record<string, string> = {
   accepted: "accept",
+  arrived: "arrive",
+  started: "start",
   declined: "decline",
   completed: "complete",
   cancelled: "cancel",

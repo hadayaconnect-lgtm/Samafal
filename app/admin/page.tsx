@@ -40,6 +40,8 @@ const isToday = (ts: number) => new Date(ts).toDateString() === new Date().toDat
 const STATUS_KEY = {
   requested: "ride_requested",
   accepted: "ride_accepted",
+  arrived: "ride_arrived",
+  started: "ride_started",
   completed: "ride_completed",
   declined: "ride_declined",
   cancelled: "ride_cancelled",
