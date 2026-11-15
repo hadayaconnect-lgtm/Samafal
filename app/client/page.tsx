@@ -11,6 +11,7 @@ import { ClientStars, RatingBadge, RatingBar, StarPicker } from "@/components/Ra
 import { RideHistory } from "@/components/RideHistory";
 import { signOut } from "@/lib/auth";
 import { useAct, useApp } from "@/lib/useApp";
+import { useRideAlerts } from "@/lib/useRideAlerts";
 import { claimPaid, commentRide, rateRide, requestRide, setRideStatus } from "@/lib/store";
 import { ZONES, nearestZone, zoneCoords, type ZoneId } from "@/lib/zones";
 import { etaMin, roadKm, type LatLng } from "@/lib/geo";
@@ -43,6 +44,7 @@ function Client() {
   const { t } = useT();
   const app = useApp();
   const act = useAct();
+  useRideAlerts("client");
 
   const [gps, setGps] = useState<LatLng | null>(null);
   const [gpsError, setGpsError] = useState(false);

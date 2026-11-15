@@ -217,4 +217,7 @@ export const so: Partial<Record<Key, string>> = {
   stars_thanks: "Mahadsanid qiimaynta!",
   stars_n: "{n} ka mid ah 5",
   stars_reviews: "{n} qiimayn",
+  notif_new_request: "Codsi safar cusub",
+  notif_ride_title: "Safarkaaga",
+  notif_ride_cancelled: "Safarka waa la jiray",
 };

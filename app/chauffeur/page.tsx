@@ -12,6 +12,7 @@ import { AuthGate } from "@/components/AuthGate";
 import { signOut } from "@/lib/auth";
 import { confirmPaid, patchDriver, registerDriver, setRideStatus } from "@/lib/store";
 import { useAct, useApp } from "@/lib/useApp";
+import { useRideAlerts } from "@/lib/useRideAlerts";
 import { fmtNum } from "@/lib/pricing";
 import { ZONES, zoneCoords, type ZoneId } from "@/lib/zones";
 import type { Driver, Ride } from "@/lib/types";
@@ -100,6 +101,7 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
   const app = useApp();
   const act = useAct();
   const [showHistory, setShowHistory] = useState(false);
+  useRideAlerts("driver", driver.id);
 
   const canWork = driver.verified && !driver.suspended;
   const mine = app.rides.filter((r) => r.driverId === driver.id);

@@ -215,6 +215,9 @@ export const fr = {
   stars_thanks: "Merci pour votre note !",
   stars_n: "{n} sur 5",
   stars_reviews: "{n} avis",
+  notif_new_request: "Nouvelle demande de course",
+  notif_ride_title: "Votre course",
+  notif_ride_cancelled: "Course annulée",
 } as const;
 
 export type Key = keyof typeof fr;

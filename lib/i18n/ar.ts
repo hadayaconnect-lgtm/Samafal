@@ -217,4 +217,7 @@ export const ar: Partial<Record<Key, string>> = {
   stars_thanks: "شكرًا على تقييمك!",
   stars_n: "{n} من 5",
   stars_reviews: "{n} تقييم",
+  notif_new_request: "طلب رحلة جديد",
+  notif_ride_title: "رحلتك",
+  notif_ride_cancelled: "أُلغيت الرحلة",
 };
