@@ -21,8 +21,13 @@ const tel = (p: string) => `tel:${p.replace(/\s/g, "")}`;
 
 export default function ChauffeurPage() {
   const { t } = useT();
+  // Connexion par e-mail uniquement. Accès SMS de démonstration pour les examinateurs : /chauffeur?demo=1.
+  const [demo, setDemo] = useState(false);
+  useEffect(() => {
+    setDemo(new URLSearchParams(window.location.search).has("demo"));
+  }, []);
   return (
-    <AuthGate title={t("driver_title")} methods={["phone"]}>
+    <AuthGate title={t("driver_title")} methods={demo ? ["email", "phone"] : ["email"]}>
       {(me) => <Inner meId={me.id} />}
     </AuthGate>
   );
