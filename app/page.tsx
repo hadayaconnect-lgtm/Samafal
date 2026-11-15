@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ComponentType } from "react";
-import { ChevronIcon, PinIcon, ShieldIcon, WheelIcon } from "@/components/Icons";
+import { ChevronIcon, PinIcon, WheelIcon } from "@/components/Icons";
 import { LangSwitcher } from "@/components/TopBar";
 import { LogoMark } from "@/components/Logo";
 import { useT } from "@/components/LangProvider";
@@ -20,7 +20,7 @@ type Role = {
 const ROLES: Role[] = [
   { href: "/client", title: "home_client", sub: "home_client_sub", Icon: PinIcon, main: true },
   { href: "/chauffeur", title: "home_driver", sub: "home_driver_sub", Icon: WheelIcon },
-  { href: "/admin", title: "home_union", sub: "home_union_sub", Icon: ShieldIcon },
+  // L'administration reste joignable à l'adresse /admin, mais n'est plus proposée au public.
 ];
 
 export default function Home() {
