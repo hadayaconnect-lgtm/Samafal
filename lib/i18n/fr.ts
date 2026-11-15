@@ -188,6 +188,11 @@ export const fr = {
   ride_completed: "Terminée",
   ride_declined: "Refusée",
   ride_cancelled: "Annulée",
+  home_zero: "0 % de commission pour les chauffeurs",
+  how_title: "Comment ça marche",
+  how_1: "Vous proposez votre prix, dès 500 FDJ.",
+  how_2: "Le chauffeur accepte ou refuse votre prix.",
+  how_3: "Il vient vous chercher. Paiement en espèces ou par mobile.",
 } as const;
 
 export type Key = keyof typeof fr;

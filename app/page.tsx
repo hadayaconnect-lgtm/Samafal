@@ -5,6 +5,7 @@ import type { ComponentType } from "react";
 import { ChevronIcon, PinIcon, WheelIcon } from "@/components/Icons";
 import { LangSwitcher } from "@/components/TopBar";
 import { LogoMark } from "@/components/Logo";
+import { RoadScene } from "@/components/RoadScene";
 import { useT } from "@/components/LangProvider";
 import { useApp } from "@/lib/useApp";
 import type { Key } from "@/lib/i18n";
@@ -30,7 +31,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="bg-ink px-5 pb-14 pt-4 text-white">
+      <header className="bg-ink px-5 pb-12 pt-4 text-white">
         <div className="mx-auto flex w-full max-w-xl flex-col gap-8">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -41,13 +42,19 @@ export default function Home() {
           </div>
           <div className="grid gap-4">
             <p className="text-3xl font-bold leading-tight text-balance">{t("tagline")}</p>
-            {app.ready && (
-            <p className="inline-flex w-fit items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm">
-                <span className="h-2.5 w-2.5 rounded-full bg-taxi" aria-hidden="true" />
-                {t("online_count", { n: online })}
+            <div className="flex flex-wrap gap-2">
+              {app.ready && (
+                <p className="inline-flex w-fit items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm">
+                  <span className="h-2.5 w-2.5 rounded-full bg-taxi" aria-hidden="true" />
+                  {t("online_count", { n: online })}
+                </p>
+              )}
+              <p className="inline-flex w-fit items-center gap-2 rounded-full bg-taxi px-3 py-1.5 text-sm font-bold text-ink">
+                {t("home_zero")}
               </p>
-            )}
+            </div>
           </div>
+          <RoadScene />
         </div>
       </header>
 
@@ -76,6 +83,20 @@ export default function Home() {
             </Link>
           ))}
         </nav>
+
+        <section className="card mt-2 grid gap-3 p-5" aria-labelledby="how-title">
+          <h2 id="how-title" className="text-lg font-bold">{t("how_title")}</h2>
+          <ol className="grid gap-3">
+            {(["how_1", "how_2", "how_3"] as const).map((k, i) => (
+              <li key={k} className="flex items-center gap-3">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-taxi font-bold text-ink">
+                  {i + 1}
+                </span>
+                <span className="text-sm">{t(k)}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
 
         <div className="mt-auto grid gap-3 pt-6 text-sm text-ink/70">
           <p>{t("live_note")}</p>

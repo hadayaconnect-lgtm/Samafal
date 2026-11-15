@@ -181,3 +181,44 @@ a:focus-visible {
   box-shadow: 0 1px 4px rgba(11, 46, 34, 0.3);
   pointer-events: none;
 }
+
+/* Accueil : le petit taxi qui roule sur la route */
+@keyframes tb-drive {
+  from {
+    transform: translateX(-120px);
+  }
+  to {
+    transform: translateX(420px);
+  }
+}
+@keyframes tb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes tb-road {
+  to {
+    stroke-dashoffset: -26;
+  }
+}
+.tb-taxi {
+  animation: tb-drive 9s linear infinite;
+}
+.tb-wheel {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: tb-spin 0.7s linear infinite;
+}
+.tb-dash {
+  animation: tb-road 0.9s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tb-taxi,
+  .tb-wheel,
+  .tb-dash {
+    animation: none;
+  }
+  .tb-taxi {
+    transform: translateX(150px);
+  }
+}
