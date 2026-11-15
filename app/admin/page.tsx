@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { AuthGate } from "@/components/AuthGate";
-import { RatingBadge, RatingInput } from "@/components/Rating";
+import { ClientStars, RatingBadge, RatingInput } from "@/components/Rating";
 import { ChevronIcon } from "@/components/Icons";
 import { useT } from "@/components/LangProvider";
 import { TopBar } from "@/components/TopBar";
@@ -189,6 +189,7 @@ function Dashboard() {
                   )}
                   {d.available && !d.suspended && d.verified && <span className="chip">{t("state_online")}</span>}
                   <RatingBadge rating={d.rating} inspected={d.inspection !== null} />
+                  <ClientStars rating={d.clientRating} count={d.clientRatings} />
                 </div>
                 <p className="mt-1 text-xs text-ink/60">
                   {d.inspection

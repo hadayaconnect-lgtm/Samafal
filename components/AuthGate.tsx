@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import {
   normalizePhone,
+  SPACE_KEY,
   saveLoginDetails,
   sendCode,
   sendEmailCode,
@@ -32,6 +34,19 @@ export function AuthGate({
 }) {
   const { t } = useT();
   const { session, profile, loading, saveName } = useAuth();
+  const pathname = usePathname();
+
+  // Retient l'espace de la personne connectée : à la réouverture, elle y revient directement.
+  const ready = Boolean(session && profile?.full_name && profile?.phone);
+  useEffect(() => {
+    if (!ready || role === "union") return;
+    if (pathname !== "/client" && pathname !== "/chauffeur") return;
+    try {
+      localStorage.setItem(SPACE_KEY, pathname);
+    } catch {
+      /* stockage indisponible */
+    }
+  }, [ready, role, pathname]);
 
   let body: ReactNode;
   if (loading || (session && !profile)) body = <p className="p-4">{t("loading")}</p>;

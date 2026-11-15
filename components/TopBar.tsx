@@ -29,7 +29,7 @@ export function TopBar({ title, right }: { title: string; right?: ReactNode }) {
   return (
     <header className="flex items-center justify-between gap-3 bg-ink px-4 py-2.5 text-white">
       <div className="flex min-w-0 items-center gap-3">
-        <Link href="/" aria-label={t("back")} className="flex items-center gap-2 text-white/80 hover:text-white">
+        <Link href="/?home=1" aria-label={t("back")} className="flex items-center gap-2 text-white/80 hover:text-white">
           <span className="text-xl leading-none rtl:-scale-x-100">‹</span>
           <LogoMark size={28} />
         </Link>

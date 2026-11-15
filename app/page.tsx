@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import type { ComponentType } from "react";
 import { ChevronIcon, PinIcon, WheelIcon } from "@/components/Icons";
 import { LangSwitcher } from "@/components/TopBar";
@@ -8,6 +10,8 @@ import { LogoMark } from "@/components/Logo";
 import { RoadScene } from "@/components/RoadScene";
 import { useT } from "@/components/LangProvider";
 import { useApp } from "@/lib/useApp";
+import { SPACE_KEY } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
 import type { Key } from "@/lib/i18n";
 
 type Role = {
@@ -28,6 +32,30 @@ export default function Home() {
   const { t } = useT();
   const app = useApp();
   const online = app.drivers.filter((d) => d.verified && !d.suspended && d.available).length;
+  const router = useRouter();
+
+  // Une personne déjà connectée retrouve directement son espace (client ou chauffeur).
+  // Le bouton « retour » des pages ouvre l'accueil avec ?home=1 pour pouvoir le revoir.
+  const [checking, setChecking] = useState(true);
+  useEffect(() => {
+    let space: string | null = null;
+    try {
+      space = new URLSearchParams(window.location.search).has("home") ? null : localStorage.getItem(SPACE_KEY);
+    } catch {
+      /* stockage indisponible */
+    }
+    if (space !== "/client" && space !== "/chauffeur") {
+      setChecking(false);
+      return;
+    }
+    const target = space;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (data.session) router.replace(target);
+      else setChecking(false);
+    });
+  }, [router]);
+
+  if (checking) return <div className="min-h-dvh bg-ink" aria-hidden="true" />;
 
   return (
     <div className="flex min-h-dvh flex-col">

@@ -7,10 +7,11 @@ import { CheckIcon, ChevronIcon, PhoneIcon, PinIcon } from "@/components/Icons";
 import { TopBar } from "@/components/TopBar";
 import { useT } from "@/components/LangProvider";
 import { AuthGate } from "@/components/AuthGate";
-import { RatingBadge, RatingBar } from "@/components/Rating";
+import { ClientStars, RatingBadge, RatingBar, StarPicker } from "@/components/Rating";
+import { RideHistory } from "@/components/RideHistory";
 import { signOut } from "@/lib/auth";
 import { useAct, useApp } from "@/lib/useApp";
-import { claimPaid, commentRide, requestRide, setRideStatus } from "@/lib/store";
+import { claimPaid, commentRide, rateRide, requestRide, setRideStatus } from "@/lib/store";
 import { ZONES, nearestZone, zoneCoords, type ZoneId } from "@/lib/zones";
 import { etaMin, roadKm, type LatLng } from "@/lib/geo";
 import { DEFAULT_OFFER, fmtNum, MAX_OFFER, MIN_OFFER, OFFER_STEP } from "@/lib/pricing";
@@ -51,6 +52,7 @@ function Client() {
   const [payment, setPayment] = useState<Payment>("cash");
   const [price, setPrice] = useState(DEFAULT_OFFER);
   const [rideId, setRideId] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
 
   const sheetRef = useRef<HTMLElement>(null);
   const [sheetH, setSheetH] = useState(320);
@@ -171,6 +173,16 @@ function Client() {
 
         {showRide && ride && rideDriver ? (
           <RidePanel ride={ride} driver={rideDriver} onDone={() => saveRideId(null)} />
+        ) : showHistory ? (
+          <div className="grid gap-4 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-bold">{t("history_title")}</h2>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowHistory(false)}>
+                {t("history_back")}
+              </button>
+            </div>
+            <RideHistory rides={app.rides} mode="client" />
+          </div>
         ) : (
           <>
             <div className="grid gap-4 p-4">
@@ -236,6 +248,7 @@ function Client() {
                                   {t("verified")}
                                 </span>
                                 <RatingBadge rating={d.rating} inspected={d.inspection !== null} />
+                                <ClientStars rating={d.clientRating} count={d.clientRatings} />
                               </span>
                             </span>
                             <span className="shrink-0 text-end">
@@ -305,9 +318,14 @@ function Client() {
                 </>
               )}
 
-              <button type="button" className="btn btn-ghost btn-sm w-fit" onClick={() => void signOut()}>
-                {t("auth_logout")}
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowHistory(true)}>
+                  {t("history_open")}
+                </button>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => void signOut()}>
+                  {t("auth_logout")}
+                </button>
+              </div>
             </div>
 
             {sel && (
@@ -479,6 +497,11 @@ function RidePanel({ ride, driver, onDone }: { ride: Ride; driver: Driver; onDon
           )}
         </>
       )}
+      {ride.stars ? (
+        <p className="text-sm font-semibold text-green-dark">{t("stars_thanks")}</p>
+      ) : (
+        <StarForm rideId={ride.id} />
+      )}
       {ride.commented ? <p className="text-sm font-semibold text-green-dark">{t("rate_thanks")}</p> : <CommentForm rideId={ride.id} />}
       <button type="button" className="btn btn-primary" onClick={onDone}>
         {t("new_ride")}
@@ -520,6 +543,30 @@ function RatingDetails({ driver }: { driver: Driver }) {
         </div>
       )}
     </div>
+  );
+}
+
+function StarForm({ rideId }: { rideId: string }) {
+  const { t } = useT();
+  const act = useAct();
+  const [stars, setStars] = useState(0);
+  const [busy, setBusy] = useState(false);
+  return (
+    <section className="grid gap-2 rounded-2xl border border-line p-4">
+      <h3 className="text-center font-bold">{t("stars_title")}</h3>
+      <StarPicker value={stars} onChange={setStars} />
+      <button
+        type="button"
+        className="btn btn-taxi"
+        disabled={busy || stars === 0}
+        onClick={() => {
+          setBusy(true);
+          act(rateRide(rideId, stars).finally(() => setBusy(false)));
+        }}
+      >
+        {t("stars_send")}
+      </button>
+    </section>
   );
 }
 

@@ -19,6 +19,7 @@ let wallets = new Map<string, { operator: string; number: string }>();
 let rawDrivers: Record<string, unknown>[] = [];
 let rawRides: Record<string, unknown>[] = [];
 let rawComments: Record<string, unknown>[] = [];
+let rawStars: Record<string, unknown>[] = [];
 let prices: Record<string, number> = {};
 const timers: Partial<Record<"drivers" | "rides", ReturnType<typeof setTimeout>>> = {};
 
@@ -28,6 +29,7 @@ function emit() {
 
 function rebuild() {
   const myCommented = new Set(rawComments.filter((c) => c.client_id === userId).map((c) => c.ride_id as string));
+  const starsByRide = new Map(rawStars.map((x) => [x.ride_id as string, x.stars as number]));
   const drivers: Driver[] = rawDrivers.map((r) => {
     const w = wallets.get(r.id as string);
     const status = r.status as string;
@@ -44,6 +46,8 @@ function rebuild() {
       available: r.available as boolean,
       rating: Number(r.rating),
       rides: r.rides_count as number,
+      clientRating: r.client_rating == null ? null : Number(r.client_rating),
+      clientRatings: Number(r.client_ratings_count ?? 0),
       joinedAt: new Date(r.created_at as string).getTime(),
       walletOperator: w?.operator ?? "",
       walletNumber: w?.number ?? "",
@@ -73,6 +77,7 @@ function rebuild() {
     createdAt: new Date(r.created_at as string).getTime(),
     updatedAt: new Date(r.updated_at as string).getTime(),
     commented: myCommented.has(r.id as string),
+    stars: starsByRide.get(r.id as string) ?? null,
   }));
   const comments: Comment[] = rawComments.map((c) => ({
     rideId: c.ride_id as string,
@@ -101,6 +106,10 @@ async function loadComments() {
   const { data } = await supabase.from("ride_comments").select("*").order("created_at", { ascending: false }).limit(500);
   if (data) rawComments = data;
 }
+async function loadStars() {
+  const { data } = await supabase.from("ride_stars").select("ride_id, stars").limit(500);
+  if (data) rawStars = data;
+}
 async function loadRides() {
   const { data } = await supabase.from("rides").select("*").order("created_at", { ascending: false }).limit(200);
   if (data) rawRides = data;
@@ -108,7 +117,7 @@ async function loadRides() {
 
 export async function refreshAll() {
   if (!userId) return;
-  await Promise.all([loadDrivers(), loadWallets(), loadRides(), loadComments(), loadPrices()]);
+  await Promise.all([loadDrivers(), loadWallets(), loadRides(), loadComments(), loadStars(), loadPrices()]);
   rebuild();
 }
 
@@ -118,7 +127,7 @@ function schedule(table: "drivers" | "rides") {
     timers[table] = undefined;
     if (!userId) return;
     if (table === "drivers") await loadDrivers();
-    else await Promise.all([loadRides(), loadWallets(), loadDrivers(), loadComments()]);
+    else await Promise.all([loadRides(), loadWallets(), loadDrivers(), loadComments(), loadStars()]);
     rebuild();
   }, 250);
 }
@@ -135,6 +144,7 @@ function apply(session: Session | null) {
     rawDrivers = [];
     rawRides = [];
     rawComments = [];
+    rawStars = [];
     prices = {};
     wallets = new Map();
     cache = EMPTY;
@@ -295,6 +305,13 @@ export async function confirmPaid(id: string) {
 /** Le client laisse un commentaire sur une course terminée (visible de tous, prénom seulement). */
 export async function commentRide(id: string, text: string) {
   const { error } = await supabase.rpc("comment_ride", { p_ride: id, p_comment: text });
+  fail(error);
+  await refreshAll();
+}
+
+/** Le client note la course de 1 à 5 étoiles (une seule fois). */
+export async function rateRide(id: string, stars: number) {
+  const { error } = await supabase.rpc("rate_ride", { p_ride: id, p_stars: stars });
   fail(error);
   await refreshAll();
 }

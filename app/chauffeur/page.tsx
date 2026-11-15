@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { DriverForm } from "@/components/DriverForm";
 import { ChevronIcon, PhoneIcon } from "@/components/Icons";
+import { ClientStars } from "@/components/Rating";
+import { RideHistory } from "@/components/RideHistory";
 import { useT } from "@/components/LangProvider";
 import { TopBar } from "@/components/TopBar";
 import { AuthGate } from "@/components/AuthGate";
@@ -92,6 +94,7 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
   const { t } = useT();
   const app = useApp();
   const act = useAct();
+  const [showHistory, setShowHistory] = useState(false);
 
   const canWork = driver.verified && !driver.suspended;
   const mine = app.rides.filter((r) => r.driverId === driver.id);
@@ -140,13 +143,16 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
           </button>
         </div>
 
-        {driver.suspended ? (
-          <span className="chip chip-bad w-fit">{t("status_suspended")}</span>
-        ) : driver.verified ? (
-          <span className="chip chip-ok w-fit">{t("status_verified")}</span>
-        ) : (
-          <span className="chip chip-warn w-fit">{t("status_pending")}</span>
-        )}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          {driver.suspended ? (
+            <span className="chip chip-bad w-fit">{t("status_suspended")}</span>
+          ) : driver.verified ? (
+            <span className="chip chip-ok w-fit">{t("status_verified")}</span>
+          ) : (
+            <span className="chip chip-warn w-fit">{t("status_pending")}</span>
+          )}
+          <ClientStars rating={driver.clientRating} count={driver.clientRatings} />
+        </div>
 
         <button
           type="button"
@@ -281,6 +287,19 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
           ))}
         </section>
       )}
+
+      <section className="card grid gap-3 p-4">
+        <button
+          type="button"
+          className="flex w-full items-center justify-between gap-3 text-start font-bold"
+          aria-expanded={showHistory}
+          onClick={() => setShowHistory((v) => !v)}
+        >
+          {t("history_title")}
+          <ChevronIcon className={`h-4 w-4 transition ${showHistory ? "rotate-90" : "rtl:-scale-x-100"}`} />
+        </button>
+        {showHistory && <RideHistory rides={mine} mode="driver" />}
+      </section>
 
       <section className="card p-4">
         <label className="label" htmlFor="zone">{t("my_zone")}</label>

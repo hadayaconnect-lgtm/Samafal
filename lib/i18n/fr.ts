@@ -202,6 +202,19 @@ export const fr = {
   arrived_sub: "Votre chauffeur vous attend : {vehicle} · {plate}",
   started_title: "Course en cours",
   started_sub: "Bonne route avec {name} !",
+  history_open: "Mes courses",
+  history_title: "Historique des courses",
+  history_empty: "Aucune course pour le moment.",
+  history_back: "Retour",
+  history_total: "Au total : {n} course(s) terminée(s) · {sum} {cur}",
+  hist_not_rated: "Pas encore notée",
+  hist_rating_given: "Votre note",
+  hist_rating_got: "Note reçue",
+  stars_title: "Notez votre course",
+  stars_send: "Envoyer la note",
+  stars_thanks: "Merci pour votre note !",
+  stars_n: "{n} sur 5",
+  stars_reviews: "{n} avis",
 } as const;
 
 export type Key = keyof typeof fr;

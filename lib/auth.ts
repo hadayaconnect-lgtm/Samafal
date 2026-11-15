@@ -47,7 +47,15 @@ export async function saveLoginDetails(name: string, phone: string) {
   await supabase.from("profiles").update({ full_name: name, phone }).eq("id", data.user.id);
 }
 
+/** Espace (client ou chauffeur) où rouvrir l'application tant que la personne reste connectée. */
+export const SPACE_KEY = "tb:space";
+
 export async function signOut() {
+  try {
+    localStorage.removeItem(SPACE_KEY);
+  } catch {
+    /* stockage indisponible */
+  }
   await supabase.auth.signOut();
 }
 

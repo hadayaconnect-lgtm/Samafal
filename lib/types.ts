@@ -13,6 +13,9 @@ export type Driver = {
   available: boolean;
   rating: number;
   rides: number;
+  /** Moyenne des étoiles données par les clients (null si aucun avis). */
+  clientRating: number | null;
+  clientRatings: number;
   joinedAt: number;
   walletOperator: string;
   walletNumber: string;
@@ -40,6 +43,8 @@ export type Ride = {
   updatedAt: number;
   /** Le client a déjà commenté cette course. */
   commented: boolean;
+  /** Étoiles données par le client (null si pas encore noté). */
+  stars: number | null;
 };
 
 export type Comment = {
