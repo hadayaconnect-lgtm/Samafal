@@ -76,14 +76,14 @@ export function RoadScene() {
         {/* Taxi (vu de côté, roule vers la droite) */}
         <g className="tb-taxi">
           <polygon points="70,70 114,58 114,86 70,75" fill="url(#tb-beam)" />
-          <rect x="0" y="66" width="70" height="18" rx="5" fill="#f2b01e" />
-          <path d="M14 66L22 50Q23 48 26 48H44Q47 48 48.500 50L56 66z" fill="#f2b01e" />
+          <rect x="0" y="66" width="70" height="18" rx="5" fill="#1fa65b" />
+          <path d="M14 66L22 50Q23 48 26 48H44Q47 48 48.500 50L56 66z" fill="#1fa65b" />
           <path d="M20 64L26 52H34V64zM37 64V52H44L50 64z" fill="#cfe8d8" />
           <rect x="29" y="41" width="12" height="7" rx="1.500" fill="#ffffff" />
-          <text x="35" y="46.200" fontSize="4.400" fontWeight="800" textAnchor="middle" fill="#0b2e22">
+          <text x="35" y="46.200" fontSize="4.400" fontWeight="800" textAnchor="middle" fill="#0a5a31">
             TAXI
           </text>
-          <line x1="2" y1="76" x2="68" y2="76" stroke="#0b2e22" strokeWidth="3" strokeDasharray="3 3" />
+          <line x1="2" y1="76" x2="68" y2="76" stroke="#ffffff" strokeWidth="3" strokeDasharray="3 3" />
           <rect x="66" y="69" width="4.500" height="4.500" rx="1" fill="#fff3b0" />
           <rect x="0" y="69" width="2.500" height="4.500" fill="#e14b3a" />
           <g className="tb-wheel">
