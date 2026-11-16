@@ -34,6 +34,8 @@ export const fr = {
   auth_first_time: "Première connexion",
   auth_welcome: "Bienvenue",
   welcome_name: "Bienvenue {name} !",
+  auth_admin_title: "Espace administrateur",
+  auth_admin_sub: "Saisissez votre adresse e-mail pour recevoir votre code de connexion.",
   auth_welcome_sub: "Réservez un taxi vérifié à Djibouti. Renseignez vos coordonnées pour que le chauffeur puisse vous joindre.",
   auth_name_placeholder: "Ex. Hodan Ahmed",
   auth_logout: "Se déconnecter",

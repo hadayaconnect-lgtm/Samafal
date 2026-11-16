@@ -207,8 +207,10 @@ function CodeLogin({ mode, simple }: { mode: "phone" | "email"; simple?: boolean
       }}
     >
       <div>
-        <h2 className="text-xl font-bold">{t(isEmail ? "auth_welcome" : "auth_phone_title")}</h2>
-        <p className="mt-1 text-sm text-ink/70">{t(isEmail ? "auth_welcome_sub" : "auth_phone_hint")}</p>
+        <h2 className="text-xl font-bold">{t(simple ? "auth_admin_title" : isEmail ? "auth_welcome" : "auth_phone_title")}</h2>
+        <p className="mt-1 text-sm text-ink/70">
+          {t(simple ? "auth_admin_sub" : isEmail ? "auth_welcome_sub" : "auth_phone_hint")}
+        </p>
       </div>
 
       {isEmail && !simple && (
