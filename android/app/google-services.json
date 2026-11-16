@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "471180009370",
+    "project_id": "taxibell-df7f0",
+    "storage_bucket": "taxibell-df7f0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:471180009370:android:89ab00a0e8a6786ccee423",
+        "android_client_info": {
+          "package_name": "com.hadayaconnect.taxibell"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbsGtPjryW5vpTxdVmiwsg6mNQIKuJZOA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

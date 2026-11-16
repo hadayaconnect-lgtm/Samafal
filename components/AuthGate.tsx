@@ -57,7 +57,7 @@ export function AuthGate({
   let body: ReactNode;
   if (loading || (session && !profile)) body = <p className="p-4">{t("loading")}</p>;
   else if (!session || !profile) body = <Login methods={methods} />;
-  else if (!profile.full_name || !profile.phone) body = <NameStep profile={profile} onSave={saveName} />;
+  else if (role !== "union" && (!profile.full_name || !profile.phone)) body = <NameStep profile={profile} onSave={saveName} />;
   else if (role === "union" && profile.role !== "union") {
     body = (
       <div className="card mx-auto grid w-full max-w-sm gap-3 p-5">
