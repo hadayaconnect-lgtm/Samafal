@@ -39,6 +39,8 @@ export default function Home() {
   const [checking, setChecking] = useState(true);
   // Espace enregistré dans le compte (client ou chauffeur) : il est verrouillé, on ne propose que celui-là.
   const [locked, setLocked] = useState<"client" | "driver" | null>(null);
+  // Nom enregistré : affiché à la place de « Je suis chauffeur / client ».
+  const [myName, setMyName] = useState<string | null>(null);
   useEffect(() => {
     let remembered: string | null = null;
     let wantHome = false;
@@ -53,9 +55,11 @@ export default function Home() {
         setChecking(false);
         return;
       }
-      const { data: p } = await supabase.from("profiles").select("space").eq("id", data.session.user.id).maybeSingle();
-      const s = (p as { space?: "client" | "driver" | null } | null)?.space ?? null;
+      const { data: p } = await supabase.from("profiles").select("space, full_name").eq("id", data.session.user.id).maybeSingle();
+      const row = p as { space?: "client" | "driver" | null; full_name?: string | null } | null;
+      const s = row?.space ?? null;
       if (s) setLocked(s);
+      if (row?.full_name) setMyName(row.full_name);
       const target = s ? (s === "driver" ? "/chauffeur" : "/client") : remembered === "/client" || remembered === "/chauffeur" ? remembered : null;
       if (target && !wantHome) router.replace(target);
       else setChecking(false);
@@ -117,7 +121,7 @@ export default function Home() {
                 <Icon className="h-6 w-6" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-lg font-bold">{t(title)}</span>
+                <span className="block text-lg font-bold">{locked && myName ? myName : t(title)}</span>
                 <span className={`block text-sm ${main ? "text-white/85" : "text-ink/70"}`}>{t(sub)}</span>
               </span>
               <ChevronIcon className="h-5 w-5 shrink-0 rtl:-scale-x-100" />
