@@ -156,6 +156,7 @@ export const so: Partial<Record<Key, string>> = {
   auth_have_account: "Waxaan horey u lahaa akoon",
   auth_first_time: "Marka ugu horreysa",
   auth_welcome: "Soo dhawoow",
+  welcome_name: "Soo dhawoow {name} !",
   auth_welcome_sub: "Buug taksi la xaqiijiyay oo ku yaal Jabuuti. Geli macluumaadkaaga si darawalku kuu helo.",
   auth_name_placeholder: "Tusaale: Hodan Axmed",
   auth_not_union: "Akoonkan ma haysto marin u helka maamulka.",

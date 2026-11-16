@@ -161,6 +161,7 @@ export const ar: Partial<Record<Key, string>> = {
   auth_have_account: "لدي حساب بالفعل",
   auth_first_time: "أول تسجيل دخول",
   auth_welcome: "مرحبًا بك",
+  welcome_name: "مرحبًا {name} !",
   auth_welcome_sub: "احجز تاكسي موثوقًا في جيبوتي. أدخل بياناتك ليتمكن السائق من الاتصال بك.",
   auth_name_placeholder: "مثال: هدى أحمد",
   auth_not_union: "هذا الحساب لا يملك صلاحية الإدارة.",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { forgetPush } from "./push";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
@@ -46,7 +46,11 @@ export async function saveLoginDetails(name: string, phone: string) {
   const { data } = await supabase.auth.getUser();
   if (!data.user) return;
   await supabase.from("profiles").update({ full_name: name, phone }).eq("id", data.user.id);
+  // Prévient l'application de relire le profil : la personne entre directement, sans redonner ses infos.
+  window.dispatchEvent(new Event(PROFILE_EVENT));
 }
+
+const PROFILE_EVENT = "tb:profile-updated";
 
 /** Espace (client ou chauffeur) où rouvrir l'application tant que la personne reste connectée. */
 export const SPACE_KEY = "tb:space";
@@ -66,10 +70,23 @@ export function useAuth() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Seule la lecture la plus récente compte (évite qu'une réponse ancienne écrase le nom tout juste enregistré).
+  const seq = useRef(0);
   const loadProfile = useCallback(async (uid: string) => {
+    const n = ++seq.current;
     const { data } = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
-    setProfile((data as Profile | null) ?? null);
+    if (n === seq.current) setProfile((data as Profile | null) ?? null);
   }, []);
+
+  useEffect(() => {
+    const reload = () => {
+      void supabase.auth.getSession().then(({ data }) => {
+        if (data.session) void loadProfile(data.session.user.id);
+      });
+    };
+    window.addEventListener(PROFILE_EVENT, reload);
+    return () => window.removeEventListener(PROFILE_EVENT, reload);
+  }, [loadProfile]);
 
   useEffect(() => {
     let alive = true;

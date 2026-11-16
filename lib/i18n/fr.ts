@@ -33,6 +33,7 @@ export const fr = {
   auth_have_account: "J'ai déjà un compte",
   auth_first_time: "Première connexion",
   auth_welcome: "Bienvenue",
+  welcome_name: "Bienvenue {name} !",
   auth_welcome_sub: "Réservez un taxi vérifié à Djibouti. Renseignez vos coordonnées pour que le chauffeur puisse vous joindre.",
   auth_name_placeholder: "Ex. Hodan Ahmed",
   auth_logout: "Se déconnecter",
