@@ -55,7 +55,13 @@ export default function Home() {
     });
   }, [router]);
 
-  if (checking) return <div className="min-h-dvh bg-ink" aria-hidden="true" />;
+  if (checking)
+    return (
+      <div className="grid min-h-dvh place-items-center bg-ink" aria-hidden="true">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/icon-192.png" alt="" width={96} height={96} className="rounded-3xl" />
+      </div>
+    );
 
   return (
     <div className="flex min-h-dvh flex-col">

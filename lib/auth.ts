@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { forgetPush } from "./push";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 
@@ -56,6 +57,7 @@ export async function signOut() {
   } catch {
     /* stockage indisponible */
   }
+  await forgetPush();
   await supabase.auth.signOut();
 }
 

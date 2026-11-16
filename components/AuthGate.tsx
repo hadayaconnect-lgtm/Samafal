@@ -15,6 +15,7 @@ import {
   verifyEmailCode,
   type Profile,
 } from "@/lib/auth";
+import { registerPush } from "@/lib/push";
 import { useT } from "./LangProvider";
 import { TopBar } from "./TopBar";
 
@@ -47,6 +48,11 @@ export function AuthGate({
       /* stockage indisponible */
     }
   }, [ready, role, pathname]);
+
+  // Application Android : enregistre l'appareil pour les notifications push.
+  useEffect(() => {
+    if (ready) void registerPush();
+  }, [ready]);
 
   let body: ReactNode;
   if (loading || (session && !profile)) body = <p className="p-4">{t("loading")}</p>;

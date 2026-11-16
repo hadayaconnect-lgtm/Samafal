@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AdminStats } from "@/components/AdminStats";
 import { Avatar } from "@/components/Avatar";
 import { AuthGate } from "@/components/AuthGate";
 import { ClientStars, RatingBadge, RatingInput } from "@/components/Rating";
@@ -132,6 +133,8 @@ function Dashboard() {
           <p className="mt-1 text-3xl font-bold tabular-nums">{pending.length}</p>
         </button>
       </section>
+
+      <AdminStats rides={app.rides} drivers={app.drivers} />
 
       <section className="grid gap-3">
         <div className="flex items-baseline justify-between gap-3">
