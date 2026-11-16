@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import {
+  ADMIN_EMAIL,
+  signInAdmin,
   normalizePhone,
   SPACE_KEY,
   saveLoginDetails,
@@ -108,9 +110,60 @@ export function AuthGate({
   );
 }
 
+function AdminLogin({ onEmail }: { onEmail: () => void }) {
+  const { t } = useT();
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <form
+      className="card grid gap-4 p-5"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setBusy(true);
+        setError(null);
+        try {
+          await signInAdmin(code);
+        } catch {
+          setError(t("auth_admin_wrong"));
+          setBusy(false);
+        }
+      }}
+    >
+      <div>
+        <h2 className="text-xl font-bold">{t("auth_admin_title")}</h2>
+        <p className="mt-1 text-sm text-ink/70">{t("auth_admin_code_sub")}</p>
+      </div>
+      {/* Champ d'identifiant caché : permet au navigateur de proposer d'enregistrer le code. */}
+      <input type="email" name="username" autoComplete="username" value={ADMIN_EMAIL} readOnly hidden />
+      <div>
+        <label className="label" htmlFor="admin-code">{t("auth_admin_code_label")}</label>
+        <input
+          id="admin-code"
+          className="field"
+          type="password"
+          autoComplete="current-password"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          dir="ltr"
+        />
+      </div>
+      {error && <p className="rounded-xl bg-bad/10 p-3 text-sm text-bad" role="alert">{error}</p>}
+      <button type="submit" className="btn btn-primary" disabled={busy || code.length < 6}>
+        {busy ? t("loading") : t("auth_admin_enter")}
+      </button>
+      <button type="button" className="btn btn-ghost btn-sm" onClick={onEmail}>
+        {t("auth_admin_forgot")}
+      </button>
+    </form>
+  );
+}
+
 function Login({ methods, simple }: { methods: ("phone" | "email")[]; simple?: boolean }) {
   const { t } = useT();
   const [mode, setMode] = useState<"phone" | "email">(methods[0] ?? "phone");
+  const [viaEmail, setViaEmail] = useState(false);
+  if (simple && !viaEmail) return <AdminLogin onEmail={() => setViaEmail(true)} />;
   return (
     <div className="grid gap-4">
       {methods.length > 1 && (

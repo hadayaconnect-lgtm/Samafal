@@ -41,6 +41,14 @@ export async function verifyEmailCode(email: string, token: string) {
   if (error) throw new Error(error.message);
 }
 
+/** Compte administrateur : connexion par code secret (l'adresse n'est pas un secret, le code l'est). */
+export const ADMIN_EMAIL = "gouledhassan86@gmail.com";
+
+export async function signInAdmin(code: string) {
+  const { error } = await supabase.auth.signInWithPassword({ email: ADMIN_EMAIL, password: code });
+  if (error) throw new Error(error.message);
+}
+
 /** Enregistre le nom et le numéro saisis avant la connexion (première connexion par e-mail). */
 export async function saveLoginDetails(name: string, phone: string) {
   const { data } = await supabase.auth.getUser();
