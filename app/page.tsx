@@ -37,20 +37,27 @@ export default function Home() {
   // Une personne déjà connectée retrouve directement son espace (client ou chauffeur).
   // Le bouton « retour » des pages ouvre l'accueil avec ?home=1 pour pouvoir le revoir.
   const [checking, setChecking] = useState(true);
+  // Espace enregistré dans le compte (client ou chauffeur) : il est verrouillé, on ne propose que celui-là.
+  const [locked, setLocked] = useState<"client" | "driver" | null>(null);
   useEffect(() => {
-    let space: string | null = null;
+    let remembered: string | null = null;
+    let wantHome = false;
     try {
-      space = new URLSearchParams(window.location.search).has("home") ? null : localStorage.getItem(SPACE_KEY);
+      wantHome = new URLSearchParams(window.location.search).has("home");
+      remembered = wantHome ? null : localStorage.getItem(SPACE_KEY);
     } catch {
       /* stockage indisponible */
     }
-    if (space !== "/client" && space !== "/chauffeur") {
-      setChecking(false);
-      return;
-    }
-    const target = space;
-    void supabase.auth.getSession().then(({ data }) => {
-      if (data.session) router.replace(target);
+    void supabase.auth.getSession().then(async ({ data }) => {
+      if (!data.session) {
+        setChecking(false);
+        return;
+      }
+      const { data: p } = await supabase.from("profiles").select("space").eq("id", data.session.user.id).maybeSingle();
+      const s = (p as { space?: "client" | "driver" | null } | null)?.space ?? null;
+      if (s) setLocked(s);
+      const target = s ? (s === "driver" ? "/chauffeur" : "/client") : remembered === "/client" || remembered === "/chauffeur" ? remembered : null;
+      if (target && !wantHome) router.replace(target);
       else setChecking(false);
     });
   }, [router]);
@@ -94,7 +101,7 @@ export default function Home() {
 
       <main className="mx-auto -mt-8 flex w-full max-w-xl flex-1 flex-col gap-3 px-5 pb-6">
         <nav className="grid gap-3">
-          {ROLES.map(({ href, title, sub, Icon, main }) => (
+          {ROLES.filter((r) => !locked || r.href === (locked === "driver" ? "/chauffeur" : "/client")).map(({ href, title, sub, Icon, main }) => (
             <Link
               key={href}
               href={href}

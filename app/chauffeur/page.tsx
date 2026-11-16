@@ -28,7 +28,7 @@ export default function ChauffeurPage() {
     setDemo(new URLSearchParams(window.location.search).has("demo"));
   }, []);
   return (
-    <AuthGate title={t("driver_title")} methods={demo ? ["email", "phone"] : ["email"]}>
+    <AuthGate title={t("driver_title")} space="driver" methods={demo ? ["email", "phone"] : ["email"]}>
       {(me) => <Inner meId={me.id} />}
     </AuthGate>
   );

@@ -5,7 +5,16 @@ import { forgetPush } from "./push";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 
-export type Profile = { id: string; phone: string | null; email: string | null; full_name: string | null; role: "client" | "union" };
+export type Space = "client" | "driver";
+export type Profile = {
+  id: string;
+  phone: string | null;
+  email: string | null;
+  full_name: string | null;
+  role: "client" | "union";
+  /** Espace choisi à la première connexion (verrouillé ensuite). Absent tant que la migration n'est pas appliquée. */
+  space?: Space | null;
+};
 
 /** 77 00 00 00 -> +25377000000. Un numéro déjà international est conservé. */
 export function normalizePhone(input: string): string | null {
@@ -39,6 +48,13 @@ export async function sendEmailCode(email: string) {
 export async function verifyEmailCode(email: string, token: string) {
   const { error } = await supabase.auth.verifyOtp({ email, token: token.trim(), type: "email" });
   if (error) throw new Error(error.message);
+}
+
+/** Enregistre l'espace (client ou chauffeur) dans le compte : une seule fois, ensuite verrouillé. */
+export async function setMySpace(space: Space) {
+  const { error } = await supabase.rpc("set_my_space", { p_space: space });
+  if (error) throw new Error(error.message);
+  window.dispatchEvent(new Event(PROFILE_EVENT));
 }
 
 /** Compte administrateur : connexion par code secret (l'adresse n'est pas un secret, le code l'est). */

@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ADMIN_EMAIL,
   signInAdmin,
+  setMySpace,
+  type Space,
   normalizePhone,
   SPACE_KEY,
   saveLoginDetails,
@@ -24,12 +26,15 @@ import { TopBar } from "./TopBar";
 export function AuthGate({
   title,
   role,
+  space,
   fullScreen,
   methods = ["phone", "email"],
   children,
 }: {
   title: string;
   role?: "union";
+  /** Espace de cette page : enregistré à la première connexion, puis verrouillé. */
+  space?: Space;
   fullScreen?: boolean;
   /** Modes de connexion proposés (par défaut : SMS et e-mail). */
   methods?: ("phone" | "email")[];
@@ -50,6 +55,24 @@ export function AuthGate({
       /* stockage indisponible */
     }
   }, [ready, role, pathname]);
+
+  // Premier passage : l'espace choisi (client ou chauffeur) est enregistré dans le compte.
+  // Ensuite, la personne est toujours ramenée vers son espace.
+  const router = useRouter();
+  const mySpace = profile?.space ?? null;
+  const spaceAsked = useRef(false);
+  useEffect(() => {
+    if (!ready || role === "union" || !space || profile?.role === "union") return;
+    if (mySpace === null && profile && "space" in profile) {
+      if (spaceAsked.current) return;
+      spaceAsked.current = true;
+      void setMySpace(space).catch(() => {
+        /* migration non appliquée : l'app fonctionne comme avant */
+      });
+    } else if (mySpace && mySpace !== space) {
+      router.replace(mySpace === "driver" ? "/chauffeur" : "/client");
+    }
+  }, [ready, role, space, mySpace, profile, router]);
 
   // Application Android : enregistre l'appareil pour les notifications push.
   useEffect(() => {
@@ -76,6 +99,7 @@ export function AuthGate({
   if (loading || (session && !profile)) body = <p className="p-4">{t("loading")}</p>;
   else if (!session || !profile) body = <Login methods={role === "union" ? ["email"] : methods} simple={role === "union"} />;
   else if (role !== "union" && (!profile.full_name || !profile.phone)) body = <NameStep profile={profile} onSave={saveName} />;
+  else if (role !== "union" && space && mySpace && mySpace !== space) body = <p className="p-4">{t("loading")}</p>;
   else if (role === "union" && profile.role !== "union") {
     body = (
       <div className="card mx-auto grid w-full max-w-sm gap-3 p-5">

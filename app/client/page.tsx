@@ -34,7 +34,7 @@ export default function ClientPage() {
     setDemo(new URLSearchParams(window.location.search).has("demo"));
   }, []);
   return (
-    <AuthGate title={t("client_title")} fullScreen methods={demo ? ["email", "phone"] : ["email"]}>
+    <AuthGate title={t("client_title")} space="client" fullScreen methods={demo ? ["email", "phone"] : ["email"]}>
       {() => <Client />}
     </AuthGate>
   );
