@@ -1,6 +1,7 @@
 // Fonction Supabase « send-push » : envoie une notification push (Firebase FCM)
-// quand une course est créée ou change de statut.
-// Appelée par un Database Webhook sur la table public.rides (INSERT et UPDATE).
+// quand une course est créée ou change de statut, et quand un chauffeur demande à s'inscrire
+// (l'administrateur est alors prévenu).
+// Appelée par un Database Webhook sur public.rides (INSERT et UPDATE) et public.drivers (INSERT).
 //
 // Secrets à définir (Supabase > Edge Functions > Secrets) :
 //   FCM_SERVICE_ACCOUNT : contenu complet du fichier JSON « compte de service » Firebase
@@ -71,13 +72,27 @@ Deno.serve(async (req) => {
     return new Response("Interdit", { status: 401 });
   }
   const payload = await req.json();
+  const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+  let userIds: string[] = [];
+  let title = "";
+  let body = "";
+  let rideId = "";
+
+  if (payload.table === "drivers") {
+    // Nouveau chauffeur à valider : on prévient tous les administrateurs.
+    const drv = payload.record as { full_name?: string; plate?: string; status?: string } | undefined;
+    if (payload.type !== "INSERT" || !drv || drv.status !== "pending") return new Response("rien à envoyer");
+    const { data: admins } = await db.from("profiles").select("id").eq("role", "union");
+    userIds = (admins ?? []).map((a: { id: string }) => a.id);
+    title = "Nouveau chauffeur à valider";
+    body = `${drv.full_name ?? "Un chauffeur"}${drv.plate ? " · " + drv.plate : ""}`;
+  } else {
   const ride = payload.record as Ride | undefined;
   const old = payload.old_record as Ride | null | undefined;
   if (!ride) return new Response("ok");
-
+  rideId = ride.id;
   let userId: string | null = null;
-  let title = "";
-  let body = "";
   if (payload.type === "INSERT" && ride.status === "requested") {
     userId = ride.driver_id;
     title = "Nouvelle demande de course";
@@ -93,10 +108,11 @@ Deno.serve(async (req) => {
       body = TEXTS[ride.status];
     }
   }
-  if (!userId) return new Response("rien à envoyer");
+  if (userId) userIds = [userId];
+  }
+  if (!userIds.length) return new Response("rien à envoyer");
 
-  const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-  const { data: tokens } = await db.from("push_tokens").select("token").eq("user_id", userId);
+  const { data: tokens } = await db.from("push_tokens").select("token").in("user_id", userIds);
   if (!tokens?.length) return new Response("aucun appareil");
 
   const sa = JSON.parse(Deno.env.get("FCM_SERVICE_ACCOUNT")!);
@@ -111,7 +127,7 @@ Deno.serve(async (req) => {
         message: {
           token,
           notification: { title, body },
-          data: { rideId: ride.id },
+          data: { rideId },
           android: { priority: "HIGH", notification: { channel_id: "taxibell-rides", sound: "default" } },
         },
       }),

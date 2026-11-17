@@ -65,8 +65,13 @@ function HomeScreen() {
         setChecking(false);
         return;
       }
-      const { data: p } = await supabase.from("profiles").select("space, full_name").eq("id", data.session.user.id).maybeSingle();
-      const row = p as { space?: "client" | "driver" | null; full_name?: string | null } | null;
+      const { data: p } = await supabase.from("profiles").select("space, full_name, role").eq("id", data.session.user.id).maybeSingle();
+      const row = p as { space?: "client" | "driver" | null; full_name?: string | null; role?: string | null } | null;
+      // L'administrateur retrouve directement son tableau de bord.
+      if (row?.role === "union" && !wantHome) {
+        router.replace("/admin");
+        return;
+      }
       const s = row?.space ?? null;
       if (s) setLocked(s);
       if (row?.full_name) setMyName(row.full_name);
@@ -161,6 +166,12 @@ function HomeScreen() {
           <p className="text-center text-xs text-ink/50">
             Powered by <span className="font-semibold text-ink/70">Hadaya Connect</span>
           </p>
+          {/* Petit accès administrateur : la session reste enregistrée, la porte suivante s'ouvre directement. */}
+          {!locked && (
+            <Link href="/admin" className="mx-auto w-fit rounded-full border border-line px-3 py-1 text-xs font-semibold text-ink/60 hover:text-ink">
+              {t("home_union")}
+            </Link>
+          )}
         </div>
       </main>
     </div>
