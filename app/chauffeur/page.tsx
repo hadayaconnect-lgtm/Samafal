@@ -31,13 +31,13 @@ export default function ChauffeurPage() {
   return (
     <LocationGate>
       <AuthGate title={t("driver_title")} space="driver" methods={demo ? ["email", "phone"] : ["email"]}>
-        {(me) => <Inner meId={me.id} />}
+        {(me) => <Inner meId={me.id} name={me.full_name ?? ""} phone={me.phone ?? ""} />}
       </AuthGate>
     </LocationGate>
   );
 }
 
-function Inner({ meId }: { meId: string }) {
+function Inner({ meId, name, phone }: { meId: string; name: string; phone: string }) {
   const { t } = useT();
   const app = useApp();
   const driver = app.drivers.find((d) => d.id === meId);
@@ -54,7 +54,7 @@ function Inner({ meId }: { meId: string }) {
           <section className="card grid gap-3 p-4">
             <h2 className="text-lg font-bold">{t("register")}</h2>
             <p className="text-sm text-ink/70">{t("register_note")}</p>
-            <DriverForm submitKey="register_btn" onSubmit={registerDriver} />
+            <DriverForm submitKey="register_btn" onSubmit={registerDriver} initial={{ name, phone }} />
             <button type="button" className="btn btn-ghost btn-sm w-fit" onClick={() => void signOut()}>
               {t("auth_logout")}
             </button>

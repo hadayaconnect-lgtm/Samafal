@@ -188,7 +188,7 @@ export const fr = {
   paid_claimed_driver: "Le client dit avoir payé",
   zero_commission: "Aucune commission pour le moment.",
 
-  union_title: "Administration",
+  union_title: "Administrateur",
   pin: "Code d'accès",
   enter: "Entrer",
   pin_wrong: "Code incorrect.",

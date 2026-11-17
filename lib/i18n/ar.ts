@@ -105,7 +105,7 @@ export const ar: Partial<Record<Key, string>> = {
   paid_claimed_driver: "العميل يقول إنه دفع",
   zero_commission: "لا توجد عمولة حاليًا.",
 
-  union_title: "الإدارة",
+  union_title: "المسؤول",
   pin: "رمز الدخول",
   enter: "دخول",
   pin_wrong: "الرمز غير صحيح.",

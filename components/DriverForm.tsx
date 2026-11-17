@@ -14,10 +14,24 @@ const EMPTY: NewDriver = {
   walletNumber: "",
 };
 
-export function DriverForm({ submitKey, onSubmit }: { submitKey: Key; onSubmit: (d: NewDriver) => Promise<void> | void }) {
+export function DriverForm({
+  submitKey,
+  onSubmit,
+  initial,
+}: {
+  submitKey: Key;
+  onSubmit: (d: NewDriver) => Promise<void> | void;
+  /** Nom et téléphone déjà donnés à la connexion : on ne les redemande pas. */
+  initial?: { name?: string; phone?: string };
+}) {
   const { t } = useT();
   const uid = useId();
-  const [f, setF] = useState<NewDriver>(EMPTY);
+  const [f, setF] = useState<NewDriver>(() => ({
+    ...EMPTY,
+    name: initial?.name ?? "",
+    phone: initial?.phone ?? "",
+    walletNumber: initial?.phone ?? "",
+  }));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
 

@@ -105,7 +105,7 @@ export const so: Partial<Record<Key, string>> = {
   paid_claimed_driver: "Macmiilku wuxuu leeyahay waa bixiyay",
   zero_commission: "Hadda ma jiro komishan.",
 
-  union_title: "Maamulka",
+  union_title: "Maamule",
   pin: "Koodhka gelitaanka",
   enter: "Gal",
   pin_wrong: "Koodhku waa khalad.",
