@@ -76,7 +76,7 @@ export function AdminStats({ rides, drivers }: { rides: Ride[]; drivers: Driver[
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: t("adm_drivers"), value: drivers.length },
+          { label: t("adm_drivers"), value: drivers.filter((d) => !d.deleted).length },
           { label: t("adm_clients"), value: clients },
           { label: t("adm_rides_total"), value: rides.length },
           { label: t("adm_done"), value: done.length },

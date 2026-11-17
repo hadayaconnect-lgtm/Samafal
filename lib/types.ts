@@ -10,6 +10,8 @@ export type Driver = {
   lng: number;
   verified: boolean;
   suspended: boolean;
+  /** Supprimé par l'administrateur : masqué des listes, mais ses anciennes courses restent. */
+  deleted: boolean;
   available: boolean;
   rating: number;
   rides: number;

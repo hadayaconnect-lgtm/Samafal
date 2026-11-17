@@ -162,6 +162,10 @@ export const so: Partial<Record<Key, string>> = {
   auth_admin_enter: "Gal",
   auth_admin_wrong: "Koodku waa khalad.",
   auth_admin_forgot: "Koodka ma halmaamay? Ku hel koodka email-ka",
+  delete_driver: "Tirtir",
+  delete_confirm:
+    "Ma si buuxda ayaad u tirtirtaa {name}? Qofkan mar dambe ma geli karo. Safarradiisii hore waxay ku harayaan taariikhda.",
+  delete_yes: "Haa, tirtir",
   auth_admin_title: "Goobta maamulka",
   auth_admin_sub: "Geli ciwaanka email-kaaga si aad u hesho koodka gelitaanka.",
   auth_welcome_sub: "Buug taksi la xaqiijiyay oo ku yaal Jabuuti. Geli macluumaadkaaga si darawalku kuu helo.",

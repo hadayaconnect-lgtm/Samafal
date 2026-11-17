@@ -68,9 +68,12 @@ export default function Home() {
 
   if (checking)
     return (
-      <div className="grid min-h-dvh place-items-center bg-ink" aria-hidden="true">
+      <div className="relative grid min-h-dvh place-items-center bg-ink" aria-hidden="true">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/icon-192.png" alt="" width={96} height={96} className="rounded-3xl" />
+        <p className="absolute inset-x-0 bottom-10 text-center text-xs tracking-wide text-white/60">
+          Powered by <span className="font-semibold text-white/85">Hadaya Connect</span>
+        </p>
       </div>
     );
 
@@ -145,6 +148,9 @@ export default function Home() {
 
         <div className="mt-auto grid gap-3 pt-6 text-sm text-ink/70">
           <p>{t("live_note")}</p>
+          <p className="text-center text-xs text-ink/50">
+            Powered by <span className="font-semibold text-ink/70">Hadaya Connect</span>
+          </p>
         </div>
       </main>
     </div>

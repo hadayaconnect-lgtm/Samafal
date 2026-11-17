@@ -39,6 +39,10 @@ export const fr = {
   auth_admin_enter: "Entrer",
   auth_admin_wrong: "Code incorrect.",
   auth_admin_forgot: "Code oublié ? Recevoir un code par e-mail",
+  delete_driver: "Supprimer",
+  delete_confirm:
+    "Supprimer définitivement {name} ? Cette personne ne pourra plus se connecter. Ses anciennes courses restent dans l'historique.",
+  delete_yes: "Oui, supprimer",
   auth_admin_title: "Espace administrateur",
   auth_admin_sub: "Saisissez votre adresse e-mail pour recevoir votre code de connexion.",
   auth_welcome_sub: "Réservez un taxi vérifié à Djibouti. Renseignez vos coordonnées pour que le chauffeur puisse vous joindre.",

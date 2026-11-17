@@ -43,6 +43,7 @@ function rebuild() {
       lng: r.lng as number,
       verified: status === "verified",
       suspended: status === "suspended",
+      deleted: status === "deleted",
       available: r.available as boolean,
       rating: Number(r.rating),
       rides: r.rides_count as number,
@@ -240,6 +241,14 @@ export async function patchDriver(id: string, patch: { available?: boolean; lat?
 /** Validation, suspension : le syndicat uniquement. */
 export async function setDriverStatus(id: string, status: "pending" | "verified" | "suspended") {
   const { error } = await supabase.rpc("set_driver_status", { p_driver: id, p_status: status });
+  fail(error);
+  await loadDrivers();
+  rebuild();
+}
+
+/** Suppression d'un chauffeur (administrateur uniquement) : l'historique des courses est conservé. */
+export async function deleteDriver(id: string) {
+  const { error } = await supabase.rpc("delete_driver", { p_driver: id });
   fail(error);
   await loadDrivers();
   rebuild();
