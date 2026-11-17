@@ -7,6 +7,7 @@ import { CheckIcon, ChevronIcon, PhoneIcon, PinIcon } from "@/components/Icons";
 import { TopBar } from "@/components/TopBar";
 import { useT } from "@/components/LangProvider";
 import { AuthGate } from "@/components/AuthGate";
+import { LocationGate } from "@/components/LocationGate";
 import { ClientStars, RatingBadge, RatingBar, StarPicker } from "@/components/Rating";
 import { RideHistory } from "@/components/RideHistory";
 import { signOut } from "@/lib/auth";
@@ -34,9 +35,11 @@ export default function ClientPage() {
     setDemo(new URLSearchParams(window.location.search).has("demo"));
   }, []);
   return (
-    <AuthGate title={t("client_title")} space="client" fullScreen methods={demo ? ["email", "phone"] : ["email"]}>
-      {() => <Client />}
-    </AuthGate>
+    <LocationGate>
+      <AuthGate title={t("client_title")} space="client" fullScreen methods={demo ? ["email", "phone"] : ["email"]}>
+        {() => <Client />}
+      </AuthGate>
+    </LocationGate>
   );
 }
 
@@ -123,6 +126,12 @@ function Client() {
       { enableHighAccuracy: true, timeout: 10000 },
     );
   }
+
+  // Localisation automatique à l'ouverture : les distances partent du client, pas du centre-ville.
+  useEffect(() => {
+    locate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function reserve() {
     if (!sel) return;
@@ -257,7 +266,7 @@ function Client() {
                               <span className="block text-xl font-bold leading-none tabular-nums" dir="ltr">
                                 {etaMin(km)} min
                               </span>
-                              <span className="mt-1 block text-xs text-ink/60" dir="ltr">{km.toFixed(1)} km</span>
+                              <span className="mt-1 block text-xs text-ink/60" dir="ltr">{km < 1 ? `${Math.max(5, Math.round((km * 1000) / 5) * 5)} m` : `${km.toFixed(1)} km`}</span>
                             </span>
                           </button>
                         </li>

@@ -9,6 +9,7 @@ import { RideHistory } from "@/components/RideHistory";
 import { useT } from "@/components/LangProvider";
 import { TopBar } from "@/components/TopBar";
 import { AuthGate } from "@/components/AuthGate";
+import { LocationGate } from "@/components/LocationGate";
 import { signOut } from "@/lib/auth";
 import { confirmPaid, patchDriver, registerDriver, setRideStatus } from "@/lib/store";
 import { useAct, useApp } from "@/lib/useApp";
@@ -28,9 +29,11 @@ export default function ChauffeurPage() {
     setDemo(new URLSearchParams(window.location.search).has("demo"));
   }, []);
   return (
-    <AuthGate title={t("driver_title")} space="driver" methods={demo ? ["email", "phone"] : ["email"]}>
-      {(me) => <Inner meId={me.id} />}
-    </AuthGate>
+    <LocationGate>
+      <AuthGate title={t("driver_title")} space="driver" methods={demo ? ["email", "phone"] : ["email"]}>
+        {(me) => <Inner meId={me.id} />}
+      </AuthGate>
+    </LocationGate>
   );
 }
 
