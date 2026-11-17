@@ -7,6 +7,7 @@ import type { ComponentType } from "react";
 import { ChevronIcon, PinIcon, WheelIcon } from "@/components/Icons";
 import { LangSwitcher } from "@/components/TopBar";
 import { LogoMark } from "@/components/Logo";
+import { LocationGate } from "@/components/LocationGate";
 import { RoadScene } from "@/components/RoadScene";
 import { useT } from "@/components/LangProvider";
 import { useApp } from "@/lib/useApp";
@@ -28,7 +29,16 @@ const ROLES: Role[] = [
   // L'administration reste joignable à l'adresse /admin, mais n'est plus proposée au public.
 ];
 
+/** La localisation est demandée dès l'ouverture de l'application, avant tout autre écran. */
 export default function Home() {
+  return (
+    <LocationGate>
+      <HomeScreen />
+    </LocationGate>
+  );
+}
+
+function HomeScreen() {
   const { t } = useT();
   const app = useApp();
   const online = app.drivers.filter((d) => d.verified && !d.suspended && d.available).length;

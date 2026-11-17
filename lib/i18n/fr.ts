@@ -160,7 +160,7 @@ export const fr = {
   wallet_number: "Numéro mobile money",
   register_btn: "Envoyer mon inscription",
   register_note: "Votre inscription doit être validée avant que vous puissiez recevoir des courses.",
-  logout: "Changer de profil",
+  logout: "Se déconnecter",
   status_verified: "Chauffeur vérifié",
   status_pending: "En attente de validation",
   status_suspended: "Compte suspendu",

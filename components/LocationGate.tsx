@@ -21,6 +21,17 @@ export function LocationGate({ children }: { children: ReactNode }) {
       return;
     }
     setState((s) => (s === "ok" ? s : "checking"));
+    // Déjà autorisée : on entre tout de suite, sans attendre le premier point GPS.
+    try {
+      void navigator.permissions
+        ?.query({ name: "geolocation" })
+        .then((p) => {
+          if (p.state === "granted") setState("ok");
+        })
+        .catch(() => {});
+    } catch {
+      /* API indisponible */
+    }
     navigator.geolocation.getCurrentPosition(
       () => setState("ok"),
       (err) => setState(err.code === 1 ? "denied" : "unavailable"),
@@ -66,9 +77,13 @@ export function LocationGate({ children }: { children: ReactNode }) {
 
   if (state === "checking") {
     return (
-      <main className="grid min-h-dvh place-items-center bg-ink p-6 text-white">
-        <p className="text-sm text-white/80">{t("loc_checking")}</p>
-      </main>
+      <div className="relative grid min-h-dvh place-items-center bg-ink" aria-hidden="true">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/icon-192.png" alt="" width={96} height={96} className="rounded-3xl" />
+        <p className="absolute inset-x-0 bottom-10 text-center text-xs tracking-wide text-white/60">
+          Powered by <span className="font-semibold text-white/85">Hadaya Connect</span>
+        </p>
+      </div>
     );
   }
 

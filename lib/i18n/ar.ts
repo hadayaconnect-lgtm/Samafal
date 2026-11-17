@@ -81,7 +81,7 @@ export const ar: Partial<Record<Key, string>> = {
   wallet_number: "رقم الدفع عبر الهاتف",
   register_btn: "إرسال طلب التسجيل",
   register_note: "يجب اعتماد تسجيلك قبل أن تتمكن من استقبال الرحلات.",
-  logout: "تغيير الملف",
+  logout: "تسجيل الخروج",
   status_verified: "سائق موثّق",
   status_pending: "بانتظار الاعتماد",
   status_suspended: "الحساب موقوف",

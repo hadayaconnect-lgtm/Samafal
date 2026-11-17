@@ -81,7 +81,7 @@ export const so: Partial<Record<Key, string>> = {
   wallet_number: "Lambarka mobile money",
   register_btn: "Dir diiwaangelintayda",
   register_note: "Ururku waa inuu ansixiyaa diiwaangelintaada ka hor inta aadan helin safarro.",
-  logout: "Beddel astaanta",
+  logout: "Ka bax",
   status_verified: "Darawal la xaqiijiyay",
   status_pending: "Waxay sugaysaa ansixinta",
   status_suspended: "Akoonka waa la hakiyay",
