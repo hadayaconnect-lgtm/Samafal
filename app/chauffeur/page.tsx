@@ -69,9 +69,9 @@ function RideLine({ ride }: { ride: Ride }) {
   const { t } = useT();
   return (
     <p className="flex flex-wrap items-center gap-x-2 rounded-2xl bg-mist p-3 text-sm">
-      <strong>{t(`zone_${ride.pickupZone}`)}</strong>
+      <strong>{ride.pickupText || t(`zone_${ride.pickupZone}`)}</strong>
       <ChevronIcon className="h-4 w-4 text-ink/50 rtl:-scale-x-100" />
-      <strong>{t(`zone_${ride.destZone}`)}</strong>
+      <strong>{ride.destText || t(`zone_${ride.destZone}`)}</strong>
       <span className="ms-auto text-base font-bold tabular-nums">
         {fmtNum(ride.price)} {t("currency")}
       </span>
@@ -81,12 +81,15 @@ function RideLine({ ride }: { ride: Ride }) {
   );
 }
 
-const mapsDir = (from: { lat: number; lng: number } | null, to: { lat: number; lng: number }) =>
-  `https://www.google.com/maps/dir/?api=1${from ? `&origin=${from.lat},${from.lng}` : ""}&destination=${to.lat},${to.lng}&travelmode=driving`;
+type Dest = { lat: number; lng: number } | string;
+const mapsDir = (from: { lat: number; lng: number } | null, to: Dest) =>
+  `https://www.google.com/maps/dir/?api=1${from ? `&origin=${from.lat},${from.lng}` : ""}&destination=${
+    typeof to === "string" ? encodeURIComponent(`${to}, Djibouti`) : `${to.lat},${to.lng}`
+  }&travelmode=driving`;
 
 function RouteLinks({ ride }: { ride: Ride }) {
   const { t } = useT();
-  const dest = zoneCoords(ride.destZone);
+  const dest: Dest = ride.destText || zoneCoords(ride.destZone);
   return (
     <div className="grid grid-cols-2 gap-2">
       <a className="btn btn-ghost btn-sm" href={mapsDir(null, ride.pickup)} target="_blank" rel="noopener noreferrer">

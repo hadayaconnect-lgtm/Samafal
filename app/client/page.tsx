@@ -14,7 +14,7 @@ import { signOut } from "@/lib/auth";
 import { useAct, useApp } from "@/lib/useApp";
 import { useRideAlerts } from "@/lib/useRideAlerts";
 import { claimPaid, commentRide, rateRide, requestRide, setRideStatus } from "@/lib/store";
-import { ZONES, nearestZone, zoneCoords, type ZoneId } from "@/lib/zones";
+import { nearestZone, zoneCoords, type ZoneId } from "@/lib/zones";
 import { etaMin, roadKm, type LatLng } from "@/lib/geo";
 import { DEFAULT_OFFER, fmtNum, MAX_OFFER, MIN_OFFER, OFFER_STEP } from "@/lib/pricing";
 import type { Driver, Payment, Ride } from "@/lib/types";
@@ -51,8 +51,10 @@ function Client() {
 
   const [gps, setGps] = useState<LatLng | null>(null);
   const [gpsError, setGpsError] = useState(false);
-  const [pickupId, setPickupId] = useState<ZoneId | "gps">("centre");
-  const [destId, setDestId] = useState<ZoneId>("aeroport");
+  // Lieux écrits par le client.
+  const [pickupText, setPickupText] = useState("");
+  const [destText, setDestText] = useState("");
+  const [placeError, setPlaceError] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [payment, setPayment] = useState<Payment>("cash");
   const [price, setPrice] = useState(DEFAULT_OFFER);
@@ -90,9 +92,9 @@ function Client() {
     }
   }
 
-  const usingGps = pickupId === "gps" && gps !== null;
-  const pos: LatLng = usingGps && gps ? gps : zoneCoords(pickupId === "gps" ? "centre" : pickupId);
-  const pickupZone: ZoneId = usingGps && gps ? nearestZone(gps) : pickupId === "gps" ? "centre" : pickupId;
+  // La position GPS est obligatoire (LocationGate) : elle donne les coordonnées de départ.
+  const pos: LatLng = gps ?? zoneCoords("centre");
+  const pickupZone: ZoneId = gps ? nearestZone(gps) : "centre";
 
   const nearby = useMemo(
     () =>
@@ -119,7 +121,6 @@ function Client() {
     navigator.geolocation.getCurrentPosition(
       (p) => {
         setGps({ lat: p.coords.latitude, lng: p.coords.longitude });
-        setPickupId("gps");
         setGpsError(false);
       },
       () => setGpsError(true),
@@ -135,12 +136,21 @@ function Client() {
 
   function reserve() {
     if (!sel) return;
+    const from = pickupText.trim();
+    const to = destText.trim();
+    if (from.length < 2 || to.length < 2) {
+      setPlaceError(true);
+      return;
+    }
+    setPlaceError(false);
     act(
       requestRide({
         driverId: sel.d.id,
         pickup: { lat: pos.lat, lng: pos.lng },
         pickupZone,
-        destZone: destId,
+        destZone: pickupZone,
+        pickupText: from,
+        destText: to,
         payment,
         price,
       }).then(saveRideId),
@@ -153,9 +163,8 @@ function Client() {
       : nearby.map((n) => ({ id: n.d.id, lat: n.d.lat, lng: n.d.lng, label: n.d.name, selected: n.d.id === sel?.d.id }));
 
   const startPt: LatLng = showRide && ride ? ride.pickup : pos;
-  const destPt = zoneCoords(showRide && ride ? ride.destZone : destId);
   const focusDriver = showRide && rideDriver ? rideDriver : sel?.d;
-  const focus: LatLng[] = [plain(startPt), plain(destPt), ...(focusDriver ? [plain(focusDriver)] : [])];
+  const focus: LatLng[] = [plain(startPt), ...(focusDriver ? [plain(focusDriver)] : [])];
 
   return (
     <div className="relative h-dvh overflow-hidden">
@@ -163,9 +172,7 @@ function Client() {
         <TaxiMap
           focus={focus}
           user={startPt}
-          dest={destPt}
           userLabel={t("pickup")}
-          destLabel={t("destination")}
           drivers={mapDrivers}
           onSelect={showRide ? undefined : setSelectedId}
           bottomPad={sheetH}
@@ -201,27 +208,30 @@ function Client() {
                 <div className="flex items-center gap-3">
                   <span className="h-3 w-3 shrink-0 rounded-full bg-[#2563eb] ring-4 ring-[#2563eb]/20" aria-hidden="true" />
                   <label htmlFor="pickup" className="w-24 shrink-0 text-sm font-semibold">{t("pickup")}</label>
-                  <select
+                  <input
                     id="pickup"
                     className="field"
-                    value={pickupId}
-                    onChange={(e) => setPickupId(e.target.value as ZoneId | "gps")}
-                  >
-                    {gps && <option value="gps">{t("pickup_gps")}</option>}
-                    {ZONES.map((z) => (
-                      <option key={z.id} value={z.id}>{t(`zone_${z.id}`)}</option>
-                    ))}
-                  </select>
+                    value={pickupText}
+                    maxLength={80}
+                    placeholder={t("place_pickup_ph")}
+                    autoComplete="off"
+                    onChange={(e) => setPickupText(e.target.value)}
+                  />
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="h-3 w-3 shrink-0 rotate-45 rounded-[2px] bg-bad" aria-hidden="true" />
                   <label htmlFor="dest" className="w-24 shrink-0 text-sm font-semibold">{t("destination")}</label>
-                  <select id="dest" className="field" value={destId} onChange={(e) => setDestId(e.target.value as ZoneId)}>
-                    {ZONES.map((z) => (
-                      <option key={z.id} value={z.id}>{t(`zone_${z.id}`)}</option>
-                    ))}
-                  </select>
+                  <input
+                    id="dest"
+                    className="field"
+                    value={destText}
+                    maxLength={80}
+                    placeholder={t("place_dest_ph")}
+                    autoComplete="off"
+                    onChange={(e) => setDestText(e.target.value)}
+                  />
                 </div>
+                {placeError && <p className="text-sm text-bad">{t("place_need")}</p>}
                 <button type="button" onClick={locate} className="btn btn-ghost btn-sm w-fit">
                   <PinIcon className="h-4 w-4" />
                   {t("use_gps")}
@@ -396,9 +406,9 @@ function RidePanel({ ride, driver, onDone }: { ride: Ride; driver: Driver; onDon
 
   const trip = (
     <p className="flex flex-wrap items-center gap-x-2 rounded-2xl bg-mist p-3 text-sm">
-      <strong>{t(`zone_${ride.pickupZone}`)}</strong>
+      <strong>{ride.pickupText || t(`zone_${ride.pickupZone}`)}</strong>
       <ChevronIcon className="h-4 w-4 text-ink/50 rtl:-scale-x-100" />
-      <strong>{t(`zone_${ride.destZone}`)}</strong>
+      <strong>{ride.destText || t(`zone_${ride.destZone}`)}</strong>
       <span className="ms-auto font-bold tabular-nums">{priceTxt} {t("currency")}</span>
     </p>
   );

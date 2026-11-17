@@ -71,6 +71,8 @@ function rebuild() {
     pickup: { lat: r.pickup_lat as number, lng: r.pickup_lng as number, gps: false },
     pickupZone: r.pickup_zone as ZoneId,
     destZone: r.dest_zone as ZoneId,
+    pickupText: (r.pickup_text as string | null) ?? "",
+    destText: (r.dest_text as string | null) ?? "",
     price: r.price as number,
     payment: r.payment as Payment,
     payStatus: r.pay_status as PayStatus,
@@ -259,6 +261,8 @@ export async function requestRide(input: {
   pickup: { lat: number; lng: number };
   pickupZone: ZoneId;
   destZone: ZoneId;
+  pickupText: string;
+  destText: string;
   payment: Payment;
   price: number;
 }): Promise<string> {
@@ -268,6 +272,8 @@ export async function requestRide(input: {
       driver_id: input.driverId,
       pickup_zone: input.pickupZone,
       dest_zone: input.destZone,
+      pickup_text: input.pickupText,
+      dest_text: input.destText,
       pickup_lat: input.pickup.lat,
       pickup_lng: input.pickup.lng,
       payment: input.payment,

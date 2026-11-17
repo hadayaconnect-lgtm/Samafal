@@ -37,6 +37,9 @@ export type Ride = {
   pickup: { lat: number; lng: number; gps: boolean };
   pickupZone: ZoneId;
   destZone: ZoneId;
+  /** Lieux écrits par le client (vides pour les anciennes courses : on affiche alors la zone). */
+  pickupText: string;
+  destText: string;
   price: number;
   payment: Payment;
   payStatus: PayStatus;

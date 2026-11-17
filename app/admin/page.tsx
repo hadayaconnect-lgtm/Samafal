@@ -289,9 +289,9 @@ function Dashboard() {
               <div key={r.id} className="card flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
                 <span className="min-w-0">
                   <span className="flex flex-wrap items-center gap-x-1.5 font-semibold">
-                    {r.clientName} · {t(`zone_${r.pickupZone}`)}
+                    {r.clientName} · {r.pickupText || t(`zone_${r.pickupZone}`)}
                     <ChevronIcon className="h-3.5 w-3.5 rtl:-scale-x-100" />
-                    {t(`zone_${r.destZone}`)}
+                    {r.destText || t(`zone_${r.destZone}`)}
                   </span>
                   <span className="block text-ink/70">{drv?.name}</span>
                 </span>
