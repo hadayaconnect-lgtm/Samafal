@@ -284,7 +284,6 @@ function Client() {
                     })}
                   </ul>
                 )}
-                {sel && <RatingDetails driver={sel.d} />}
               </section>
 
               {sel && (
@@ -336,6 +335,8 @@ function Client() {
                     </div>
                   </section>
 
+                  {/* Avis et commentaires en bas : le prix proposé reste visible sans faire défiler. */}
+                  <RatingDetails driver={sel.d} />
                 </>
               )}
 
