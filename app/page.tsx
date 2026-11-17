@@ -169,7 +169,7 @@ function HomeScreen() {
           {/* Petit accès administrateur : la session reste enregistrée, la porte suivante s'ouvre directement. */}
           {!locked && (
             <Link href="/admin" className="mx-auto w-fit rounded-full border border-line px-3 py-1 text-xs font-semibold text-ink/60 hover:text-ink">
-              {t("home_union")}
+              {t("home_admin_btn")}
             </Link>
           )}
         </div>

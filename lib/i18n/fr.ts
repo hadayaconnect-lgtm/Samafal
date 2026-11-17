@@ -7,6 +7,7 @@ export const fr = {
   home_driver: "Je suis chauffeur",
   home_driver_sub: "Recevoir et accepter des courses",
   home_union: "Administration",
+  home_admin_btn: "Administrateur",
   home_union_sub: "Valider les chauffeurs, suivre l'activité",
   auth_phone_title: "Connexion",
   auth_phone_label: "Votre numéro de téléphone",

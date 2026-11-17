@@ -157,6 +157,7 @@ export const so: Partial<Record<Key, string>> = {
   auth_first_time: "Marka ugu horreysa",
   auth_welcome: "Soo dhawoow",
   welcome_name: "Soo dhawoow {name} !",
+  home_admin_btn: "Maamule",
   place_pickup_ph: "Xagee joogtaa? Tusaale: Xaafadda 4, farmashiyaha hortiisa",
   place_dest_ph: "Xagee u socotaa? Tusaale: Garoonka",
   place_need: "Qor meesha aad ka bilaabayso iyo meesha aad u socoto.",

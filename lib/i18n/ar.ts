@@ -162,6 +162,7 @@ export const ar: Partial<Record<Key, string>> = {
   auth_first_time: "أول تسجيل دخول",
   auth_welcome: "مرحبًا بك",
   welcome_name: "مرحبًا {name} !",
+  home_admin_btn: "المسؤول",
   place_pickup_ph: "أين أنت؟ مثال: الحي 4، أمام الصيدلية",
   place_dest_ph: "إلى أين تذهب؟ مثال: المطار",
   place_need: "اكتب نقطة الانطلاق والوجهة.",
