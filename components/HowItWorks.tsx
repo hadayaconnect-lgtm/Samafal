@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useT } from "@/components/LangProvider";
 
 /** Bouton « ? » de la barre du haut : ouvre le mode d'emploi en 3 étapes (celui du client ou celui du chauffeur).
@@ -47,9 +48,10 @@ export function HowButton({ role }: { role: "client" | "driver" }) {
         )}
         <span className="relative">?</span>
       </button>
-      {open && (
+      {open &&
+        createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/45"
+          className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/45"
           role="dialog"
           aria-modal="true"
           aria-labelledby={`how-${role}`}
@@ -72,8 +74,9 @@ export function HowButton({ role }: { role: "client" | "driver" }) {
               {t("how_ok")}
             </button>
           </div>
-        </div>
-      )}
+        </div>,
+        document.body,
+        )}
     </>
   );
 }
