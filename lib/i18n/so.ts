@@ -222,6 +222,7 @@ export const so: Partial<Record<Key, string>> = {
   how_1: "Ka dooro taksi ku dhow khariidadda.",
   how_2: "Qor meesha aad ka bilaabayso iyo meesha aad u socoto, kadibna soo jeedi qiimahaaga (500 ilaa 20 000 FDJ).",
   how_3: "Darawalku wuu aqbalaa ama wuu diidaa, kadibna wuu kuu soo qaadayaa. Lacagta waxaad ku bixin kartaa caddaan ama taleefan.",
+  how_ok: "Waan fahmay",
   how_d1: "Waxaad gashaa khadka oo waxaad helaysaa codsiyada kuu dhow.",
   how_d2: "Waad aqbali kartaa ama diidi kartaa qiimaha macmiilku soo jeediyay.",
   how_d3: "Macmiilka ayaad aaddaa, ka dibna safarka waad dhammaysaa.",

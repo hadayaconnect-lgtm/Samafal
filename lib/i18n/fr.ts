@@ -220,6 +220,7 @@ export const fr = {
   how_1: "Choisissez un taxi proche sur la carte.",
   how_2: "Écrivez votre départ et votre destination, puis proposez votre prix (500 à 20 000 FDJ).",
   how_3: "Le chauffeur accepte ou refuse, puis il vient vous chercher. Paiement en espèces ou par mobile.",
+  how_ok: "Compris",
   how_d1: "Vous passez en ligne et recevez les demandes près de vous.",
   how_d2: "Vous acceptez ou refusez le prix proposé par le client.",
   how_d3: "Vous allez chercher le client, puis vous terminez la course.",

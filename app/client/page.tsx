@@ -9,7 +9,7 @@ import { useT } from "@/components/LangProvider";
 import { AuthGate } from "@/components/AuthGate";
 import { LocationGate } from "@/components/LocationGate";
 import { ClientStars, RatingBadge, RatingBar, StarPicker } from "@/components/Rating";
-import { HowItWorks } from "@/components/HowItWorks";
+import { HowButton } from "@/components/HowItWorks";
 import { RideHistory } from "@/components/RideHistory";
 import { signOut } from "@/lib/auth";
 import { useAct, useApp } from "@/lib/useApp";
@@ -188,7 +188,7 @@ function Client() {
       </div>
 
       <div className="absolute inset-x-0 top-0 z-20">
-        <TopBar title={t("client_title")} />
+        <TopBar title={t("client_title")} right={<HowButton role="client" />} />
       </div>
 
       <main
@@ -359,8 +359,6 @@ function Client() {
                   <RatingDetails driver={sel.d} />
                 </>
               )}
-
-              <HowItWorks role="client" />
 
               <div className="flex flex-wrap gap-2">
                 <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowHistory(true)}>

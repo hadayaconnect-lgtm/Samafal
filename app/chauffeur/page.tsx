@@ -5,7 +5,7 @@ import { Avatar } from "@/components/Avatar";
 import { DriverForm } from "@/components/DriverForm";
 import { ChevronIcon, PhoneIcon } from "@/components/Icons";
 import { ClientStars } from "@/components/Rating";
-import { HowItWorks } from "@/components/HowItWorks";
+import { HowButton } from "@/components/HowItWorks";
 import { RideHistory } from "@/components/RideHistory";
 import { useT } from "@/components/LangProvider";
 import { TopBar } from "@/components/TopBar";
@@ -45,7 +45,7 @@ function Inner({ meId, name, phone }: { meId: string; name: string; phone: strin
 
   return (
     <div className="min-h-dvh">
-      <TopBar title={t("driver_title")} />
+      <TopBar title={t("driver_title")} right={<HowButton role="driver" />} />
       <main className="mx-auto grid max-w-xl gap-4 p-4">
         {!app.ready ? (
           <p>{t("loading")}</p>
@@ -314,8 +314,6 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
         </button>
         {showHistory && <RideHistory rides={mine} mode="driver" />}
       </section>
-
-      <HowItWorks role="driver" />
 
       <section className="card p-4">
         <label className="label" htmlFor="zone">{t("my_zone")}</label>
