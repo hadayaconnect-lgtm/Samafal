@@ -147,10 +147,12 @@ function HomeScreen() {
           ))}
         </nav>
 
+        {/* Rien à expliquer avant le choix de l'espace : chacun voit ensuite son propre mode d'emploi. */}
+        {locked && (
         <section className="card mt-2 grid gap-3 p-5" aria-labelledby="how-title">
           <h2 id="how-title" className="text-lg font-bold">{t("how_title")}</h2>
           <ol className="grid gap-3">
-            {(["how_1", "how_2", "how_3"] as const).map((k, i) => (
+            {(locked === "driver" ? (["how_d1", "how_d2", "how_d3"] as const) : (["how_1", "how_2", "how_3"] as const)).map((k, i) => (
               <li key={k} className="flex items-center gap-3">
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-taxi font-bold text-ink">
                   {i + 1}
@@ -160,6 +162,7 @@ function HomeScreen() {
             ))}
           </ol>
         </section>
+        )}
 
         <div className="mt-auto grid gap-3 pt-6 text-sm text-ink/70">
           <p>{t("live_note")}</p>
