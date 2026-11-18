@@ -5,6 +5,7 @@ import { Avatar } from "@/components/Avatar";
 import { DriverForm } from "@/components/DriverForm";
 import { ChevronIcon, PhoneIcon } from "@/components/Icons";
 import { ClientStars } from "@/components/Rating";
+import { HowItWorks } from "@/components/HowItWorks";
 import { RideHistory } from "@/components/RideHistory";
 import { useT } from "@/components/LangProvider";
 import { TopBar } from "@/components/TopBar";
@@ -313,6 +314,8 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
         </button>
         {showHistory && <RideHistory rides={mine} mode="driver" />}
       </section>
+
+      <HowItWorks role="driver" />
 
       <section className="card p-4">
         <label className="label" htmlFor="zone">{t("my_zone")}</label>
