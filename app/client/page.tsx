@@ -60,7 +60,10 @@ function Client() {
   // Le client peut taper son prix librement ; la valeur envoyée reste bornée entre MIN_OFFER et MAX_OFFER.
   const [priceText, setPriceText] = useState(String(DEFAULT_OFFER));
   const typedPrice = parseInt(priceText.replace(/\D/g, ""), 10);
-  const price = Number.isFinite(typedPrice) ? Math.min(MAX_OFFER, Math.max(MIN_OFFER, typedPrice)) : MIN_OFFER;
+  // Arrondi au multiple de 100 le plus proche : la base de données n'accepte que des pas de 100 FDJ.
+  const price = Number.isFinite(typedPrice)
+    ? Math.min(MAX_OFFER, Math.max(MIN_OFFER, Math.round(typedPrice / OFFER_STEP) * OFFER_STEP))
+    : MIN_OFFER;
   const setPrice = (fn: (p: number) => number) => setPriceText(String(fn(price)));
   const [rideId, setRideId] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
