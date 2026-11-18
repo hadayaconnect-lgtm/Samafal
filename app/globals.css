@@ -222,3 +222,11 @@ a:focus-visible {
     transform: translateX(150px);
   }
 }
+
+/* Bouton d'aide « ? » : petit zoom régulier (le bouton grossit puis revient) pour attirer l'oeil. */
+@keyframes tb-zoom {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+}
+.tb-zoom { animation: tb-zoom 1.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .tb-zoom { animation: none; } }

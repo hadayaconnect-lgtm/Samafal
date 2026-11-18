@@ -9,15 +9,11 @@ import { useT } from "@/components/LangProvider";
 export function HowButton({ role }: { role: "client" | "driver" }) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
-  const [seen, setSeen] = useState(true);
   const storeKey = `tb:how-seen-${role}`;
 
   useEffect(() => {
     try {
-      if (!localStorage.getItem(storeKey)) {
-        setSeen(false);
-        setOpen(true);
-      }
+      if (!localStorage.getItem(storeKey)) setOpen(true);
     } catch {
       /* stockage indisponible : la fenêtre reste accessible avec le bouton */
     }
@@ -25,7 +21,6 @@ export function HowButton({ role }: { role: "client" | "driver" }) {
 
   function close() {
     setOpen(false);
-    setSeen(true);
     try {
       localStorage.setItem(storeKey, "1");
     } catch {
@@ -41,11 +36,8 @@ export function HowButton({ role }: { role: "client" | "driver" }) {
         type="button"
         aria-label={t("how_title")}
         onClick={() => setOpen(true)}
-        className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-taxi text-base font-extrabold text-ink shadow-[0_0_12px_rgba(242,176,30,0.7)]"
+        className="tb-zoom relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-taxi text-base font-extrabold text-ink shadow-[0_0_12px_rgba(242,176,30,0.7)]"
       >
-        {!seen && (
-          <span className="absolute inset-0 animate-ping rounded-full bg-taxi opacity-60 motion-reduce:animate-none" aria-hidden="true" />
-        )}
         <span className="relative">?</span>
       </button>
       {open &&
