@@ -57,7 +57,11 @@ function Client() {
   const [placeError, setPlaceError] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [payment, setPayment] = useState<Payment>("cash");
-  const [price, setPrice] = useState(DEFAULT_OFFER);
+  // Le client peut taper son prix librement ; la valeur envoyée reste bornée entre MIN_OFFER et MAX_OFFER.
+  const [priceText, setPriceText] = useState(String(DEFAULT_OFFER));
+  const typedPrice = parseInt(priceText.replace(/\D/g, ""), 10);
+  const price = Number.isFinite(typedPrice) ? Math.min(MAX_OFFER, Math.max(MIN_OFFER, typedPrice)) : MIN_OFFER;
+  const setPrice = (fn: (p: number) => number) => setPriceText(String(fn(price)));
   const [rideId, setRideId] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
 
@@ -300,9 +304,21 @@ function Client() {
                       >
                         −
                       </button>
-                      <p className="flex-1 text-center text-2xl font-bold tabular-nums" dir="ltr" aria-live="polite">
-                        {fmtNum(price)} {t("currency")}
-                      </p>
+                      <div className="flex flex-1 items-center justify-center gap-2" dir="ltr">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          enterKeyHint="done"
+                          className="w-28 rounded-xl border border-line bg-white px-2 py-2 text-center text-2xl font-bold tabular-nums outline-none focus:border-brand"
+                          aria-label={t("offer_label")}
+                          value={priceText}
+                          onFocus={(e) => e.currentTarget.select()}
+                          onChange={(e) => setPriceText(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                          onBlur={() => setPriceText(String(price))}
+                        />
+                        <span className="text-lg font-bold">{t("currency")}</span>
+                      </div>
                       <button
                         type="button"
                         className="btn btn-ghost h-12 w-12 shrink-0 text-xl"
