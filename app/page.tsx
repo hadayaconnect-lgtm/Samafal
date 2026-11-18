@@ -7,6 +7,7 @@ import type { ComponentType } from "react";
 import { ChevronIcon, PinIcon, WheelIcon } from "@/components/Icons";
 import { LangSwitcher } from "@/components/TopBar";
 import { LogoMark } from "@/components/Logo";
+import { LocationGate } from "@/components/LocationGate";
 import { RoadScene } from "@/components/RoadScene";
 import { useT } from "@/components/LangProvider";
 import { useApp } from "@/lib/useApp";
@@ -28,7 +29,16 @@ const ROLES: Role[] = [
   // L'administration reste joignable à l'adresse /admin, mais n'est plus proposée au public.
 ];
 
+/** La localisation est demandée dès l'ouverture de l'application, avant tout autre écran. */
 export default function Home() {
+  return (
+    <LocationGate>
+      <HomeScreen />
+    </LocationGate>
+  );
+}
+
+function HomeScreen() {
   const { t } = useT();
   const app = useApp();
   const online = app.drivers.filter((d) => d.verified && !d.suspended && d.available).length;
@@ -37,25 +47,50 @@ export default function Home() {
   // Une personne déjà connectée retrouve directement son espace (client ou chauffeur).
   // Le bouton « retour » des pages ouvre l'accueil avec ?home=1 pour pouvoir le revoir.
   const [checking, setChecking] = useState(true);
+  // Espace enregistré dans le compte (client ou chauffeur) : il est verrouillé, on ne propose que celui-là.
+  const [locked, setLocked] = useState<"client" | "driver" | null>(null);
+  // Nom enregistré : affiché à la place de « Je suis chauffeur / client ».
+  const [myName, setMyName] = useState<string | null>(null);
   useEffect(() => {
-    let space: string | null = null;
+    let remembered: string | null = null;
+    let wantHome = false;
     try {
-      space = new URLSearchParams(window.location.search).has("home") ? null : localStorage.getItem(SPACE_KEY);
+      wantHome = new URLSearchParams(window.location.search).has("home");
+      remembered = wantHome ? null : localStorage.getItem(SPACE_KEY);
     } catch {
       /* stockage indisponible */
     }
-    if (space !== "/client" && space !== "/chauffeur") {
-      setChecking(false);
-      return;
-    }
-    const target = space;
-    void supabase.auth.getSession().then(({ data }) => {
-      if (data.session) router.replace(target);
+    void supabase.auth.getSession().then(async ({ data }) => {
+      if (!data.session) {
+        setChecking(false);
+        return;
+      }
+      const { data: p } = await supabase.from("profiles").select("space, full_name, role").eq("id", data.session.user.id).maybeSingle();
+      const row = p as { space?: "client" | "driver" | null; full_name?: string | null; role?: string | null } | null;
+      // L'administrateur retrouve directement son tableau de bord.
+      if (row?.role === "union" && !wantHome) {
+        router.replace("/admin");
+        return;
+      }
+      const s = row?.space ?? null;
+      if (s) setLocked(s);
+      if (row?.full_name) setMyName(row.full_name);
+      const target = s ? (s === "driver" ? "/chauffeur" : "/client") : remembered === "/client" || remembered === "/chauffeur" ? remembered : null;
+      if (target && !wantHome) router.replace(target);
       else setChecking(false);
     });
   }, [router]);
 
-  if (checking) return <div className="min-h-dvh bg-ink" aria-hidden="true" />;
+  if (checking)
+    return (
+      <div className="relative grid min-h-dvh place-items-center bg-ink" aria-hidden="true">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/icon-192.png" alt="" width={96} height={96} className="rounded-3xl" />
+        <p className="absolute inset-x-0 bottom-10 text-center text-xs tracking-wide text-white/60">
+          Powered by <span className="font-semibold text-white/85">Hadaya Connect</span>
+        </p>
+      </div>
+    );
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -88,7 +123,7 @@ export default function Home() {
 
       <main className="mx-auto -mt-8 flex w-full max-w-xl flex-1 flex-col gap-3 px-5 pb-6">
         <nav className="grid gap-3">
-          {ROLES.map(({ href, title, sub, Icon, main }) => (
+          {ROLES.filter((r) => !locked || r.href === (locked === "driver" ? "/chauffeur" : "/client")).map(({ href, title, sub, Icon, main }) => (
             <Link
               key={href}
               href={href}
@@ -104,7 +139,7 @@ export default function Home() {
                 <Icon className="h-6 w-6" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-lg font-bold">{t(title)}</span>
+                <span className="block text-lg font-bold">{locked && myName ? myName : t(title)}</span>
                 <span className={`block text-sm ${main ? "text-white/85" : "text-ink/70"}`}>{t(sub)}</span>
               </span>
               <ChevronIcon className="h-5 w-5 shrink-0 rtl:-scale-x-100" />
@@ -128,6 +163,15 @@ export default function Home() {
 
         <div className="mt-auto grid gap-3 pt-6 text-sm text-ink/70">
           <p>{t("live_note")}</p>
+          <p className="text-center text-xs text-ink/50">
+            Powered by <span className="font-semibold text-ink/70">Hadaya Connect</span>
+          </p>
+          {/* Petit accès administrateur : la session reste enregistrée, la porte suivante s'ouvre directement. */}
+          {!locked && (
+            <Link href="/admin" className="mx-auto w-fit rounded-full border border-line px-3 py-1 text-xs font-semibold text-ink/60 hover:text-ink">
+              {t("home_admin_btn")}
+            </Link>
+          )}
         </div>
       </main>
     </div>

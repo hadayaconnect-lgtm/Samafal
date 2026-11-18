@@ -10,6 +10,8 @@ export type Driver = {
   lng: number;
   verified: boolean;
   suspended: boolean;
+  /** Supprimé par l'administrateur : masqué des listes, mais ses anciennes courses restent. */
+  deleted: boolean;
   available: boolean;
   rating: number;
   rides: number;
@@ -35,6 +37,9 @@ export type Ride = {
   pickup: { lat: number; lng: number; gps: boolean };
   pickupZone: ZoneId;
   destZone: ZoneId;
+  /** Lieux écrits par le client (vides pour les anciennes courses : on affiche alors la zone). */
+  pickupText: string;
+  destText: string;
   price: number;
   payment: Payment;
   payStatus: PayStatus;

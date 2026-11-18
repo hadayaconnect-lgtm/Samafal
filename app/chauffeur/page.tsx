@@ -9,9 +9,11 @@ import { RideHistory } from "@/components/RideHistory";
 import { useT } from "@/components/LangProvider";
 import { TopBar } from "@/components/TopBar";
 import { AuthGate } from "@/components/AuthGate";
+import { LocationGate } from "@/components/LocationGate";
 import { signOut } from "@/lib/auth";
 import { confirmPaid, patchDriver, registerDriver, setRideStatus } from "@/lib/store";
 import { useAct, useApp } from "@/lib/useApp";
+import { useRideAlerts } from "@/lib/useRideAlerts";
 import { fmtNum } from "@/lib/pricing";
 import { ZONES, zoneCoords, type ZoneId } from "@/lib/zones";
 import type { Driver, Ride } from "@/lib/types";
@@ -21,14 +23,21 @@ const tel = (p: string) => `tel:${p.replace(/\s/g, "")}`;
 
 export default function ChauffeurPage() {
   const { t } = useT();
+  // Connexion par e-mail uniquement. Accès SMS de démonstration pour les examinateurs : /chauffeur?demo=1.
+  const [demo, setDemo] = useState(false);
+  useEffect(() => {
+    setDemo(new URLSearchParams(window.location.search).has("demo"));
+  }, []);
   return (
-    <AuthGate title={t("driver_title")} methods={["phone"]}>
-      {(me) => <Inner meId={me.id} />}
-    </AuthGate>
+    <LocationGate>
+      <AuthGate title={t("driver_title")} space="driver" methods={demo ? ["email", "phone"] : ["email"]}>
+        {(me) => <Inner meId={me.id} name={me.full_name ?? ""} phone={me.phone ?? ""} />}
+      </AuthGate>
+    </LocationGate>
   );
 }
 
-function Inner({ meId }: { meId: string }) {
+function Inner({ meId, name, phone }: { meId: string; name: string; phone: string }) {
   const { t } = useT();
   const app = useApp();
   const driver = app.drivers.find((d) => d.id === meId);
@@ -45,7 +54,7 @@ function Inner({ meId }: { meId: string }) {
           <section className="card grid gap-3 p-4">
             <h2 className="text-lg font-bold">{t("register")}</h2>
             <p className="text-sm text-ink/70">{t("register_note")}</p>
-            <DriverForm submitKey="register_btn" onSubmit={registerDriver} />
+            <DriverForm submitKey="register_btn" onSubmit={registerDriver} initial={{ name, phone }} />
             <button type="button" className="btn btn-ghost btn-sm w-fit" onClick={() => void signOut()}>
               {t("auth_logout")}
             </button>
@@ -60,9 +69,9 @@ function RideLine({ ride }: { ride: Ride }) {
   const { t } = useT();
   return (
     <p className="flex flex-wrap items-center gap-x-2 rounded-2xl bg-mist p-3 text-sm">
-      <strong>{t(`zone_${ride.pickupZone}`)}</strong>
+      <strong>{ride.pickupText || t(`zone_${ride.pickupZone}`)}</strong>
       <ChevronIcon className="h-4 w-4 text-ink/50 rtl:-scale-x-100" />
-      <strong>{t(`zone_${ride.destZone}`)}</strong>
+      <strong>{ride.destText || t(`zone_${ride.destZone}`)}</strong>
       <span className="ms-auto text-base font-bold tabular-nums">
         {fmtNum(ride.price)} {t("currency")}
       </span>
@@ -72,12 +81,15 @@ function RideLine({ ride }: { ride: Ride }) {
   );
 }
 
-const mapsDir = (from: { lat: number; lng: number } | null, to: { lat: number; lng: number }) =>
-  `https://www.google.com/maps/dir/?api=1${from ? `&origin=${from.lat},${from.lng}` : ""}&destination=${to.lat},${to.lng}&travelmode=driving`;
+type Dest = { lat: number; lng: number } | string;
+const mapsDir = (from: { lat: number; lng: number } | null, to: Dest) =>
+  `https://www.google.com/maps/dir/?api=1${from ? `&origin=${from.lat},${from.lng}` : ""}&destination=${
+    typeof to === "string" ? encodeURIComponent(`${to}, Djibouti`) : `${to.lat},${to.lng}`
+  }&travelmode=driving`;
 
 function RouteLinks({ ride }: { ride: Ride }) {
   const { t } = useT();
-  const dest = zoneCoords(ride.destZone);
+  const dest: Dest = ride.destText || zoneCoords(ride.destZone);
   return (
     <div className="grid grid-cols-2 gap-2">
       <a className="btn btn-ghost btn-sm" href={mapsDir(null, ride.pickup)} target="_blank" rel="noopener noreferrer">
@@ -95,6 +107,7 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
   const app = useApp();
   const act = useAct();
   const [showHistory, setShowHistory] = useState(false);
+  useRideAlerts("driver", driver.id);
 
   const canWork = driver.verified && !driver.suspended;
   const mine = app.rides.filter((r) => r.driverId === driver.id);
