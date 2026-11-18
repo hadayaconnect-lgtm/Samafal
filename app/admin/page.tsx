@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { AdminStats } from "@/components/AdminStats";
 import { Avatar } from "@/components/Avatar";
 import { AuthGate } from "@/components/AuthGate";
 import { ClientStars, RatingBadge, RatingInput } from "@/components/Rating";
@@ -9,7 +8,7 @@ import { ChevronIcon } from "@/components/Icons";
 import { useT } from "@/components/LangProvider";
 import { TopBar } from "@/components/TopBar";
 import { signOut } from "@/lib/auth";
-import { deleteComment, deleteDriver, inspectDriver, setDriverStatus } from "@/lib/store";
+import { deleteComment, inspectDriver, setDriverStatus } from "@/lib/store";
 import { useAct, useApp } from "@/lib/useApp";
 import { fmtNum } from "@/lib/pricing";
 import type { RideStatus } from "@/lib/types";
@@ -80,20 +79,17 @@ function Dashboard() {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [inspecting, setInspecting] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState<string | null>(null);
 
-  // Les chauffeurs supprimés ne sont plus listés ; leurs courses restent dans l'historique.
-  const active = app.drivers.filter((d) => !d.deleted);
-  const verified = active.filter((d) => d.verified);
-  const online = active.filter((d) => d.verified && !d.suspended && d.available);
-  const pending = active.filter((d) => !d.verified);
-  const suspended = active.filter((d) => d.suspended);
+  const verified = app.drivers.filter((d) => d.verified);
+  const online = app.drivers.filter((d) => d.verified && !d.suspended && d.available);
+  const pending = app.drivers.filter((d) => !d.verified);
+  const suspended = app.drivers.filter((d) => d.suspended);
   const ridesToday = app.rides.filter((r) => isToday(r.createdAt));
   const volume = app.rides
     .filter((r) => r.status === "completed" && isToday(r.updatedAt))
     .reduce((sum, r) => sum + r.price, 0);
 
-  const shown = [...active]
+  const shown = [...app.drivers]
     .sort((a, b) => Number(a.verified) - Number(b.verified))
     .filter((d) => {
       const text = `${d.name} ${d.plate} ${d.phone}`.toLowerCase();
@@ -105,7 +101,7 @@ function Dashboard() {
     });
 
   const filters: { id: Filter; label: string; count: number }[] = [
-    { id: "all", label: t("filter_all"), count: active.length },
+    { id: "all", label: t("filter_all"), count: app.drivers.length },
     { id: "pending", label: t("stat_pending"), count: pending.length },
     { id: "online", label: t("stat_online"), count: online.length },
     { id: "suspended", label: t("status_suspended"), count: suspended.length },
@@ -137,13 +133,11 @@ function Dashboard() {
         </button>
       </section>
 
-      <AdminStats rides={app.rides} drivers={app.drivers} />
-
       <section className="grid gap-3">
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="text-lg font-bold">{t("drivers_list")}</h2>
           <p className="text-sm text-ink/60 tabular-nums">
-            {t("stat_verified")} : {verified.length} / {active.length}
+            {t("stat_verified")} : {verified.length} / {app.drivers.length}
           </p>
         </div>
 
@@ -221,34 +215,7 @@ function Dashboard() {
                 >
                   {t(d.suspended ? "reactivate" : "suspend")}
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm text-bad"
-                  onClick={() => setDeleting(deleting === d.id ? null : d.id)}
-                >
-                  {t("delete_driver")}
-                </button>
               </div>
-              {deleting === d.id && (
-                <div className="grid w-full gap-3 rounded-2xl bg-bad/10 p-4" role="alert">
-                  <p className="text-sm font-semibold">{t("delete_confirm", { name: d.name })}</p>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      className="btn btn-danger btn-sm"
-                      onClick={() => {
-                        act(deleteDriver(d.id));
-                        setDeleting(null);
-                      }}
-                    >
-                      {t("delete_yes")}
-                    </button>
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setDeleting(null)}>
-                      {t("cancel")}
-                    </button>
-                  </div>
-                </div>
-              )}
               {inspecting === d.id && <InspectForm driverId={d.id} onDone={() => setInspecting(null)} />}
               {app.comments.some((c) => c.driverId === d.id) && (
                 <details className="w-full text-sm">
@@ -289,9 +256,9 @@ function Dashboard() {
               <div key={r.id} className="card flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
                 <span className="min-w-0">
                   <span className="flex flex-wrap items-center gap-x-1.5 font-semibold">
-                    {r.clientName} · {r.pickupText || t(`zone_${r.pickupZone}`)}
+                    {r.clientName} · {t(`zone_${r.pickupZone}`)}
                     <ChevronIcon className="h-3.5 w-3.5 rtl:-scale-x-100" />
-                    {r.destText || t(`zone_${r.destZone}`)}
+                    {t(`zone_${r.destZone}`)}
                   </span>
                   <span className="block text-ink/70">{drv?.name}</span>
                 </span>

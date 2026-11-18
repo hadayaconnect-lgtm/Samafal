@@ -1,12 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import {
-  ADMIN_EMAIL,
-  signInAdmin,
-  setMySpace,
-  type Space,
   normalizePhone,
   SPACE_KEY,
   saveLoginDetails,
@@ -19,22 +15,18 @@ import {
   verifyEmailCode,
   type Profile,
 } from "@/lib/auth";
-import { registerPush } from "@/lib/push";
 import { useT } from "./LangProvider";
 import { TopBar } from "./TopBar";
 
 export function AuthGate({
   title,
   role,
-  space,
   fullScreen,
   methods = ["phone", "email"],
   children,
 }: {
   title: string;
   role?: "union";
-  /** Espace de cette page : enregistré à la première connexion, puis verrouillé. */
-  space?: Space;
   fullScreen?: boolean;
   /** Modes de connexion proposés (par défaut : SMS et e-mail). */
   methods?: ("phone" | "email")[];
@@ -56,50 +48,10 @@ export function AuthGate({
     }
   }, [ready, role, pathname]);
 
-  // Premier passage : l'espace choisi (client ou chauffeur) est enregistré dans le compte.
-  // Ensuite, la personne est toujours ramenée vers son espace.
-  const router = useRouter();
-  const mySpace = profile?.space ?? null;
-  const spaceAsked = useRef(false);
-  useEffect(() => {
-    if (!ready || role === "union" || !space || profile?.role === "union") return;
-    if (mySpace === null && profile && "space" in profile) {
-      if (spaceAsked.current) return;
-      spaceAsked.current = true;
-      void setMySpace(space).catch(() => {
-        /* migration non appliquée : l'app fonctionne comme avant */
-      });
-    } else if (mySpace && mySpace !== space) {
-      router.replace(mySpace === "driver" ? "/chauffeur" : "/client");
-    }
-  }, [ready, role, space, mySpace, profile, router]);
-
-  // Application Android : enregistre l'appareil pour les notifications push.
-  useEffect(() => {
-    if (ready) void registerPush();
-  }, [ready]);
-
-  // Message de bienvenue avec le prénom, affiché juste après une connexion (pas à chaque réouverture).
-  const wasOut = useRef(false);
-  const [welcome, setWelcome] = useState<string | null>(null);
-  useEffect(() => {
-    if (!loading && !session) wasOut.current = true;
-    if (ready && wasOut.current && profile?.full_name) {
-      wasOut.current = false;
-      setWelcome(profile.full_name);
-    }
-  }, [loading, session, ready, profile?.full_name]);
-  useEffect(() => {
-    if (welcome === null) return;
-    const id = setTimeout(() => setWelcome(null), 4500);
-    return () => clearTimeout(id);
-  }, [welcome]);
-
   let body: ReactNode;
   if (loading || (session && !profile)) body = <p className="p-4">{t("loading")}</p>;
-  else if (!session || !profile) body = <Login methods={role === "union" ? ["email"] : methods} simple={role === "union"} />;
-  else if (role !== "union" && (!profile.full_name || !profile.phone)) body = <NameStep profile={profile} onSave={saveName} />;
-  else if (role !== "union" && space && mySpace && mySpace !== space) body = <p className="p-4">{t("loading")}</p>;
+  else if (!session || !profile) body = <Login methods={methods} />;
+  else if (!profile.full_name || !profile.phone) body = <NameStep profile={profile} onSave={saveName} />;
   else if (role === "union" && profile.role !== "union") {
     body = (
       <div className="card mx-auto grid w-full max-w-sm gap-3 p-5">
@@ -110,21 +62,7 @@ export function AuthGate({
         </button>
       </div>
     );
-  } else {
-    return (
-      <>
-        {children(profile)}
-        {welcome && (
-          <div
-            role="status"
-            className="fixed inset-x-4 top-4 z-50 mx-auto max-w-sm rounded-2xl bg-green px-4 py-3 text-center font-semibold text-white shadow-lg"
-          >
-            {t("welcome_name", { name: welcome })}
-          </div>
-        )}
-      </>
-    );
-  }
+  } else return <>{children(profile)}</>;
 
   return (
     <div className={fullScreen ? "min-h-dvh bg-mist" : "min-h-dvh"}>
@@ -134,60 +72,9 @@ export function AuthGate({
   );
 }
 
-function AdminLogin({ onEmail }: { onEmail: () => void }) {
-  const { t } = useT();
-  const [code, setCode] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  return (
-    <form
-      className="card grid gap-4 p-5"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        setBusy(true);
-        setError(null);
-        try {
-          await signInAdmin(code);
-        } catch {
-          setError(t("auth_admin_wrong"));
-          setBusy(false);
-        }
-      }}
-    >
-      <div>
-        <h2 className="text-xl font-bold">{t("auth_admin_title")}</h2>
-        <p className="mt-1 text-sm text-ink/70">{t("auth_admin_code_sub")}</p>
-      </div>
-      {/* Champ d'identifiant caché : permet au navigateur de proposer d'enregistrer le code. */}
-      <input type="email" name="username" autoComplete="username" value={ADMIN_EMAIL} readOnly hidden />
-      <div>
-        <label className="label" htmlFor="admin-code">{t("auth_admin_code_label")}</label>
-        <input
-          id="admin-code"
-          className="field"
-          type="password"
-          autoComplete="current-password"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          dir="ltr"
-        />
-      </div>
-      {error && <p className="rounded-xl bg-bad/10 p-3 text-sm text-bad" role="alert">{error}</p>}
-      <button type="submit" className="btn btn-primary" disabled={busy || code.length < 6}>
-        {busy ? t("loading") : t("auth_admin_enter")}
-      </button>
-      <button type="button" className="btn btn-ghost btn-sm" onClick={onEmail}>
-        {t("auth_admin_forgot")}
-      </button>
-    </form>
-  );
-}
-
-function Login({ methods, simple }: { methods: ("phone" | "email")[]; simple?: boolean }) {
+function Login({ methods }: { methods: ("phone" | "email")[] }) {
   const { t } = useT();
   const [mode, setMode] = useState<"phone" | "email">(methods[0] ?? "phone");
-  const [viaEmail, setViaEmail] = useState(false);
-  if (simple && !viaEmail) return <AdminLogin onEmail={() => setViaEmail(true)} />;
   return (
     <div className="grid gap-4">
       {methods.length > 1 && (
@@ -207,12 +94,12 @@ function Login({ methods, simple }: { methods: ("phone" | "email")[]; simple?: b
           ))}
         </div>
       )}
-      <CodeLogin key={mode} mode={mode} simple={simple} />
+      <CodeLogin key={mode} mode={mode} />
     </div>
   );
 }
 
-function CodeLogin({ mode, simple }: { mode: "phone" | "email"; simple?: boolean }) {
+function CodeLogin({ mode }: { mode: "phone" | "email" }) {
   const { t } = useT();
   const isEmail = mode === "email";
   const [input, setInput] = useState("");
@@ -224,8 +111,7 @@ function CodeLogin({ mode, simple }: { mode: "phone" | "email"; simple?: boolean
   const [isNew, setIsNew] = useState(true);
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
-  // Administration : seulement l'e-mail, sans nom ni téléphone.
-  const askDetails = isEmail && isNew && !simple;
+  const askDetails = isEmail && isNew;
 
   async function send() {
     const v = isEmail ? validEmail(input) : normalizePhone(input);
@@ -284,13 +170,11 @@ function CodeLogin({ mode, simple }: { mode: "phone" | "email"; simple?: boolean
       }}
     >
       <div>
-        <h2 className="text-xl font-bold">{t(simple ? "auth_admin_title" : isEmail ? "auth_welcome" : "auth_phone_title")}</h2>
-        <p className="mt-1 text-sm text-ink/70">
-          {t(simple ? "auth_admin_sub" : isEmail ? "auth_welcome_sub" : "auth_phone_hint")}
-        </p>
+        <h2 className="text-xl font-bold">{t(isEmail ? "auth_welcome" : "auth_phone_title")}</h2>
+        <p className="mt-1 text-sm text-ink/70">{t(isEmail ? "auth_welcome_sub" : "auth_phone_hint")}</p>
       </div>
 
-      {isEmail && !simple && (
+      {isEmail && (
         <div className="grid grid-cols-2 gap-1 rounded-2xl bg-mist p-1" role="group">
           {([true, false] as const).map((v) => (
             <button

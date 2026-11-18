@@ -44,9 +44,9 @@ export function RideHistory({ rides, mode, limit = 30 }: { rides: Ride[]; mode: 
           return (
             <li key={r.id} className="card grid gap-1 p-3 text-sm">
               <p className="flex flex-wrap items-center gap-x-2">
-                <strong>{r.pickupText || t(`zone_${r.pickupZone}`)}</strong>
+                <strong>{t(`zone_${r.pickupZone}`)}</strong>
                 <ChevronIcon className="h-3.5 w-3.5 text-ink/50 rtl:-scale-x-100" />
-                <strong>{r.destText || t(`zone_${r.destZone}`)}</strong>
+                <strong>{t(`zone_${r.destZone}`)}</strong>
                 <span className="ms-auto font-bold tabular-nums">
                   {fmtNum(r.price)} {t("currency")}
                 </span>

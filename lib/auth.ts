@@ -1,20 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { forgetPush } from "./push";
+import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 
-export type Space = "client" | "driver";
-export type Profile = {
-  id: string;
-  phone: string | null;
-  email: string | null;
-  full_name: string | null;
-  role: "client" | "union";
-  /** Espace choisi à la première connexion (verrouillé ensuite). Absent tant que la migration n'est pas appliquée. */
-  space?: Space | null;
-};
+export type Profile = { id: string; phone: string | null; email: string | null; full_name: string | null; role: "client" | "union" };
 
 /** 77 00 00 00 -> +25377000000. Un numéro déjà international est conservé. */
 export function normalizePhone(input: string): string | null {
@@ -50,31 +40,12 @@ export async function verifyEmailCode(email: string, token: string) {
   if (error) throw new Error(error.message);
 }
 
-/** Enregistre l'espace (client ou chauffeur) dans le compte : une seule fois, ensuite verrouillé. */
-export async function setMySpace(space: Space) {
-  const { error } = await supabase.rpc("set_my_space", { p_space: space });
-  if (error) throw new Error(error.message);
-  window.dispatchEvent(new Event(PROFILE_EVENT));
-}
-
-/** Compte administrateur : connexion par code secret (l'adresse n'est pas un secret, le code l'est). */
-export const ADMIN_EMAIL = "gouledhassan86@gmail.com";
-
-export async function signInAdmin(code: string) {
-  const { error } = await supabase.auth.signInWithPassword({ email: ADMIN_EMAIL, password: code });
-  if (error) throw new Error(error.message);
-}
-
 /** Enregistre le nom et le numéro saisis avant la connexion (première connexion par e-mail). */
 export async function saveLoginDetails(name: string, phone: string) {
   const { data } = await supabase.auth.getUser();
   if (!data.user) return;
   await supabase.from("profiles").update({ full_name: name, phone }).eq("id", data.user.id);
-  // Prévient l'application de relire le profil : la personne entre directement, sans redonner ses infos.
-  window.dispatchEvent(new Event(PROFILE_EVENT));
 }
-
-const PROFILE_EVENT = "tb:profile-updated";
 
 /** Espace (client ou chauffeur) où rouvrir l'application tant que la personne reste connectée. */
 export const SPACE_KEY = "tb:space";
@@ -85,7 +56,6 @@ export async function signOut() {
   } catch {
     /* stockage indisponible */
   }
-  await forgetPush();
   await supabase.auth.signOut();
 }
 
@@ -94,23 +64,10 @@ export function useAuth() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Seule la lecture la plus récente compte (évite qu'une réponse ancienne écrase le nom tout juste enregistré).
-  const seq = useRef(0);
   const loadProfile = useCallback(async (uid: string) => {
-    const n = ++seq.current;
     const { data } = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
-    if (n === seq.current) setProfile((data as Profile | null) ?? null);
+    setProfile((data as Profile | null) ?? null);
   }, []);
-
-  useEffect(() => {
-    const reload = () => {
-      void supabase.auth.getSession().then(({ data }) => {
-        if (data.session) void loadProfile(data.session.user.id);
-      });
-    };
-    window.addEventListener(PROFILE_EVENT, reload);
-    return () => window.removeEventListener(PROFILE_EVENT, reload);
-  }, [loadProfile]);
 
   useEffect(() => {
     let alive = true;
