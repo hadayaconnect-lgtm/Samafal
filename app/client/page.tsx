@@ -5,13 +5,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { CheckIcon, ChevronIcon, PhoneIcon, PinIcon } from "@/components/Icons";
 import { TopBar } from "@/components/TopBar";
+import { BottomNav, NavIcons, NAV_H, SettingsPanel } from "@/components/BottomNav";
 import { useT } from "@/components/LangProvider";
 import { AuthGate } from "@/components/AuthGate";
 import { LocationGate } from "@/components/LocationGate";
 import { ClientStars, RatingBadge, RatingBar, StarPicker } from "@/components/Rating";
 import { HowButton } from "@/components/HowItWorks";
 import { RideHistory } from "@/components/RideHistory";
-import { signOut } from "@/lib/auth";
 import { useAct, useApp } from "@/lib/useApp";
 import { useRideAlerts } from "@/lib/useRideAlerts";
 import { claimPaid, commentRide, rateRide, requestRide, setRideStatus } from "@/lib/store";
@@ -67,7 +67,7 @@ function Client() {
     : MIN_OFFER;
   const setPrice = (fn: (p: number) => number) => setPriceText(String(fn(price)));
   const [rideId, setRideId] = useState<string | null>(null);
-  const [showHistory, setShowHistory] = useState(false);
+  const [tab, setTab] = useState<"home" | "history" | "profile">("home");
 
   const sheetRef = useRef<HTMLElement>(null);
   const [sheetH, setSheetH] = useState(320);
@@ -119,7 +119,7 @@ function Client() {
   const ride = rideId ? app.rides.find((r) => r.id === rideId) : undefined;
   const rideActive = ride !== undefined && ride.status !== "cancelled";
   const rideDriver = ride ? app.drivers.find((d) => d.id === ride.driverId) : undefined;
-  const showRide = rideActive && ride !== undefined && rideDriver !== undefined;
+  const showRide = tab === "home" && rideActive && ride !== undefined && rideDriver !== undefined;
 
   function locate() {
     if (!("geolocation" in navigator)) {
@@ -183,7 +183,7 @@ function Client() {
           userLabel={t("pickup")}
           drivers={mapDrivers}
           onSelect={showRide ? undefined : setSelectedId}
-          bottomPad={sheetH}
+          bottomPad={sheetH + 72}
         />
       </div>
 
@@ -193,21 +193,22 @@ function Client() {
 
       <main
         ref={sheetRef}
-        className="absolute inset-x-0 bottom-0 z-20 mx-auto max-h-[66dvh] max-w-xl overflow-y-auto rounded-t-3xl bg-white shadow-[0_-8px_30px_rgba(11,46,34,0.22)]"
+        style={{ bottom: NAV_H }}
+        className="absolute inset-x-0 z-20 mx-auto max-h-[60dvh] max-w-xl overflow-y-auto rounded-t-3xl bg-white shadow-[0_-8px_30px_rgba(11,46,34,0.22)]"
       >
         <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-line" aria-hidden="true" />
 
         {showRide && ride && rideDriver ? (
           <RidePanel ride={ride} driver={rideDriver} onDone={() => saveRideId(null)} />
-        ) : showHistory ? (
+        ) : tab === "history" ? (
           <div className="grid gap-4 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-bold">{t("history_title")}</h2>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowHistory(false)}>
-                {t("history_back")}
-              </button>
-            </div>
+            <h2 className="text-lg font-bold">{t("history_title")}</h2>
             <RideHistory rides={app.rides} mode="client" />
+          </div>
+        ) : tab === "profile" ? (
+          <div className="grid gap-4 p-4">
+            <h2 className="text-lg font-bold">{t("nav_profile")}</h2>
+            <SettingsPanel />
           </div>
         ) : (
           <>
@@ -360,14 +361,6 @@ function Client() {
                 </>
               )}
 
-              <div className="flex flex-wrap gap-2">
-                <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowHistory(true)}>
-                  {t("history_open")}
-                </button>
-                <button type="button" className="btn btn-ghost btn-sm" onClick={() => void signOut()}>
-                  {t("auth_logout")}
-                </button>
-              </div>
             </div>
 
             {sel && (
@@ -384,6 +377,16 @@ function Client() {
           </>
         )}
       </main>
+
+      <BottomNav
+        active={tab}
+        onChange={setTab}
+        tabs={[
+          { id: "home", label: t("nav_home"), icon: NavIcons.home },
+          { id: "history", label: t("nav_history"), icon: NavIcons.history },
+          { id: "profile", label: t("nav_profile"), icon: NavIcons.profile },
+        ]}
+      />
     </div>
   );
 }

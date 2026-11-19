@@ -7,7 +7,7 @@ import { AuthGate } from "@/components/AuthGate";
 import { ClientStars, RatingBadge, RatingInput } from "@/components/Rating";
 import { useT } from "@/components/LangProvider";
 import { TopBar } from "@/components/TopBar";
-import { signOut } from "@/lib/auth";
+import { BottomNav, NavIcons, NAV_H, SettingsPanel } from "@/components/BottomNav";
 import { deleteComment, deleteDriver, inspectDriver, setDriverStatus } from "@/lib/store";
 import { useAct, useApp } from "@/lib/useApp";
 import { fmtNum } from "@/lib/pricing";
@@ -54,15 +54,8 @@ export default function AdminPage() {
   return (
     <AuthGate title={t("union_title")} role="union">
       {() => (
-        <div className="min-h-dvh">
-          <TopBar
-            title={t("union_title")}
-            right={
-              <button type="button" onClick={() => void signOut()} className="rounded-lg border border-white/25 px-2 py-1.5 text-sm text-white">
-                {t("logout_union")}
-              </button>
-            }
-          />
+        <div className="min-h-dvh" style={{ paddingBottom: NAV_H }}>
+          <TopBar title={t("union_title")} />
           <main className="mx-auto grid max-w-3xl gap-5 p-4">
             <Dashboard />
           </main>
@@ -80,6 +73,7 @@ function Dashboard() {
   const [filter, setFilter] = useState<Filter>("all");
   const [inspecting, setInspecting] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [tab, setTab] = useState<"dash" | "history" | "settings">("dash");
 
   // Les chauffeurs supprimés ne sont plus listés ; leurs courses restent dans l'historique.
   const active = app.drivers.filter((d) => !d.deleted);
@@ -111,6 +105,67 @@ function Dashboard() {
     { id: "online", label: t("stat_online"), count: online.length },
     { id: "suspended", label: t("status_suspended"), count: suspended.length },
   ];
+
+  const nav = (
+    <BottomNav
+      active={tab}
+      onChange={setTab}
+      tabs={[
+        { id: "dash", label: t("nav_dashboard"), icon: NavIcons.chart },
+        { id: "history", label: t("nav_history"), icon: NavIcons.history },
+        { id: "settings", label: t("nav_settings"), icon: NavIcons.gear },
+      ]}
+    />
+  );
+
+  if (tab === "settings")
+    return (
+      <>
+        <SettingsPanel />
+        {nav}
+      </>
+    );
+
+  if (tab === "history")
+    return (
+      <>
+      <section className="grid gap-2">
+        <h2 className="text-lg font-bold">{t("recent_rides")}</h2>
+        <div className="grid grid-cols-2 items-start gap-2">
+          {(
+            [
+              { key: "hist_done_col", list: doneRides, chip: "chip-ok" },
+              { key: "hist_cancel_col", list: cancelledRides, chip: "chip-bad" },
+            ] as const
+          ).map((col) => (
+            <div key={col.key} className="grid min-w-0 gap-2">
+              <h3 className="flex items-center justify-between text-sm font-bold">
+                <span>{t(col.key)}</span>
+                <span className={`chip ${col.chip}`}>{col.list.length}</span>
+              </h3>
+              {col.list.length === 0 ? (
+                <p className="rounded-2xl bg-white p-3 text-xs text-ink/70">{t("no_rides")}</p>
+              ) : (
+                col.list.slice(0, 10).map((r) => {
+                  const drv = app.drivers.find((d) => d.id === r.driverId);
+                  return (
+                    <div key={r.id} className="card grid gap-1 p-3 text-xs">
+                      <span className="font-semibold break-words">
+                        {r.clientName} · {r.pickupText || t(`zone_${r.pickupZone}`)} → {r.destText || t(`zone_${r.destZone}`)}
+                      </span>
+                      <span className="text-ink/70 break-words">{drv?.name}</span>
+                      <strong className="tabular-nums">{fmtNum(r.price)} {t("currency")}</strong>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+        {nav}
+      </>
+    );
 
   return (
     <>
@@ -279,40 +334,7 @@ function Dashboard() {
 
       </section>
 
-      <section className="grid gap-2">
-        <h2 className="text-lg font-bold">{t("recent_rides")}</h2>
-        <div className="grid grid-cols-2 items-start gap-2">
-          {(
-            [
-              { key: "hist_done_col", list: doneRides, chip: "chip-ok" },
-              { key: "hist_cancel_col", list: cancelledRides, chip: "chip-bad" },
-            ] as const
-          ).map((col) => (
-            <div key={col.key} className="grid min-w-0 gap-2">
-              <h3 className="flex items-center justify-between text-sm font-bold">
-                <span>{t(col.key)}</span>
-                <span className={`chip ${col.chip}`}>{col.list.length}</span>
-              </h3>
-              {col.list.length === 0 ? (
-                <p className="rounded-2xl bg-white p-3 text-xs text-ink/70">{t("no_rides")}</p>
-              ) : (
-                col.list.slice(0, 10).map((r) => {
-                  const drv = app.drivers.find((d) => d.id === r.driverId);
-                  return (
-                    <div key={r.id} className="card grid gap-1 p-3 text-xs">
-                      <span className="font-semibold break-words">
-                        {r.clientName} · {r.pickupText || t(`zone_${r.pickupZone}`)} → {r.destText || t(`zone_${r.destZone}`)}
-                      </span>
-                      <span className="text-ink/70 break-words">{drv?.name}</span>
-                      <strong className="tabular-nums">{fmtNum(r.price)} {t("currency")}</strong>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
+      {nav}
     </>
   );
 }

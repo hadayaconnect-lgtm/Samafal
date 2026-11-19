@@ -9,6 +9,7 @@ import { HowButton } from "@/components/HowItWorks";
 import { RideHistory } from "@/components/RideHistory";
 import { useT } from "@/components/LangProvider";
 import { TopBar } from "@/components/TopBar";
+import { BottomNav, NavIcons, NAV_H, SettingsPanel } from "@/components/BottomNav";
 import { AuthGate } from "@/components/AuthGate";
 import { LocationGate } from "@/components/LocationGate";
 import { signOut } from "@/lib/auth";
@@ -44,13 +45,13 @@ function Inner({ meId, name, phone }: { meId: string; name: string; phone: strin
   const driver = app.drivers.find((d) => d.id === meId);
 
   return (
-    <div className="min-h-dvh">
+    <div className="min-h-dvh" style={{ paddingBottom: NAV_H }}>
       <TopBar title={t("driver_title")} right={<HowButton role="driver" />} />
       <main className="mx-auto grid max-w-xl gap-4 p-4">
         {!app.ready ? (
           <p>{t("loading")}</p>
         ) : driver ? (
-          <Dashboard driver={driver} onLogout={() => void signOut()} />
+          <Dashboard driver={driver} />
         ) : (
           <section className="card grid gap-3 p-4">
             <h2 className="text-lg font-bold">{t("register")}</h2>
@@ -103,11 +104,11 @@ function RouteLinks({ ride }: { ride: Ride }) {
   );
 }
 
-function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void }) {
+function Dashboard({ driver }: { driver: Driver }) {
   const { t } = useT();
   const app = useApp();
   const act = useAct();
-  const [showHistory, setShowHistory] = useState(false);
+  const [tab, setTab] = useState<"rides" | "history" | "profile">("rides");
   useRideAlerts("driver", driver.id);
 
   const canWork = driver.verified && !driver.suspended;
@@ -143,6 +144,52 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
 
   const toggleDisabled = !canWork || Boolean(active);
 
+  const nav = (
+    <BottomNav
+      active={tab}
+      onChange={setTab}
+      tabs={[
+        { id: "rides", label: t("nav_rides"), icon: NavIcons.car },
+        { id: "history", label: t("nav_history"), icon: NavIcons.history },
+        { id: "profile", label: t("nav_profile"), icon: NavIcons.profile },
+      ]}
+    />
+  );
+
+  if (tab === "history")
+    return (
+      <>
+        <h2 className="text-lg font-bold">{t("history_title")}</h2>
+        <RideHistory rides={mine} mode="driver" />
+        {nav}
+      </>
+    );
+
+  if (tab === "profile")
+    return (
+      <>
+        <section className="card flex items-center gap-3 p-4">
+          <Avatar name={driver.name} size={52} />
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-lg font-bold">{driver.name}</h2>
+            <p className="truncate text-sm text-ink/70" dir="ltr">{driver.vehicle} · {driver.plate}</p>
+            <ClientStars rating={driver.clientRating} count={driver.clientRatings} />
+          </div>
+        </section>
+        <section className="card p-4">
+          <label className="label" htmlFor="zone">{t("my_zone")}</label>
+          <select id="zone" className="field" defaultValue="" onChange={(e) => e.target.value && setZone(e.target.value as ZoneId)}>
+            <option value="" />
+            {ZONES.map((z) => (
+              <option key={z.id} value={z.id}>{t(`zone_${z.id}`)}</option>
+            ))}
+          </select>
+        </section>
+        <SettingsPanel />
+        {nav}
+      </>
+    );
+
   return (
     <>
       <section className="card grid gap-4 p-4">
@@ -152,9 +199,6 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
             <h2 className="truncate text-lg font-bold">{driver.name}</h2>
             <p className="truncate text-sm text-ink/70" dir="ltr">{driver.vehicle} · {driver.plate}</p>
           </div>
-          <button type="button" className="btn btn-ghost btn-sm shrink-0" onClick={onLogout}>
-            {t("logout")}
-          </button>
         </div>
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -302,28 +346,7 @@ function Dashboard({ driver, onLogout }: { driver: Driver; onLogout: () => void 
         </section>
       )}
 
-      <section className="card grid gap-3 p-4">
-        <button
-          type="button"
-          className="flex w-full items-center justify-between gap-3 text-start font-bold"
-          aria-expanded={showHistory}
-          onClick={() => setShowHistory((v) => !v)}
-        >
-          {t("history_title")}
-          <ChevronIcon className={`h-4 w-4 transition ${showHistory ? "rotate-90" : "rtl:-scale-x-100"}`} />
-        </button>
-        {showHistory && <RideHistory rides={mine} mode="driver" />}
-      </section>
-
-      <section className="card p-4">
-        <label className="label" htmlFor="zone">{t("my_zone")}</label>
-        <select id="zone" className="field" defaultValue="" onChange={(e) => e.target.value && setZone(e.target.value as ZoneId)}>
-          <option value="" />
-          {ZONES.map((z) => (
-            <option key={z.id} value={z.id}>{t(`zone_${z.id}`)}</option>
-          ))}
-        </select>
-      </section>
+      {nav}
     </>
   );
 }
