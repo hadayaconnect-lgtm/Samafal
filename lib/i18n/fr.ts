@@ -233,6 +233,8 @@ export const fr = {
   arrived_sub: "Votre chauffeur vous attend : {vehicle} · {plate}",
   started_title: "Course en cours",
   started_sub: "Bonne route avec {name} !",
+  role_client: "Client",
+  role_driver: "Chauffeur",
   nav_home: "Accueil",
   nav_history: "Historique",
   nav_profile: "Profil",

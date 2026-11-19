@@ -13,6 +13,7 @@ import { ClientStars, RatingBadge, RatingBar, StarPicker } from "@/components/Ra
 import { HowButton } from "@/components/HowItWorks";
 import { RideHistory } from "@/components/RideHistory";
 import { useAct, useApp } from "@/lib/useApp";
+import type { Profile } from "@/lib/auth";
 import { useRideAlerts } from "@/lib/useRideAlerts";
 import { claimPaid, commentRide, rateRide, requestRide, setRideStatus } from "@/lib/store";
 import { nearestZone, zoneCoords, type ZoneId } from "@/lib/zones";
@@ -38,13 +39,13 @@ export default function ClientPage() {
   return (
     <LocationGate>
       <AuthGate title={t("client_title")} space="client" fullScreen methods={demo ? ["email", "phone"] : ["email"]}>
-        {() => <Client />}
+        {(me) => <Client me={me} />}
       </AuthGate>
     </LocationGate>
   );
 }
 
-function Client() {
+function Client({ me }: { me: Profile }) {
   const { t } = useT();
   const app = useApp();
   const act = useAct();
@@ -208,7 +209,7 @@ function Client() {
         ) : tab === "profile" ? (
           <div className="grid gap-4 p-4">
             <h2 className="text-lg font-bold">{t("nav_profile")}</h2>
-            <SettingsPanel />
+            <SettingsPanel who={{ name: me.full_name, phone: me.phone, email: me.email, role: t("role_client") }} />
           </div>
         ) : (
           <>

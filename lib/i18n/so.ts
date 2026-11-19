@@ -235,6 +235,8 @@ export const so: Partial<Record<Key, string>> = {
   arrived_sub: "Darawalkaagu wuu ku sugayaa: {vehicle} · {plate}",
   started_title: "Safarku wuu socdaa",
   started_sub: "Safar wanaagsan {name} la jira!",
+  role_client: "Macmiil",
+  role_driver: "Darawal",
   nav_home: "Bogga hore",
   nav_history: "Taariikh",
   nav_profile: "Akoon",

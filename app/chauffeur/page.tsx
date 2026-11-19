@@ -167,6 +167,7 @@ function Dashboard({ driver }: { driver: Driver }) {
           <Avatar name={driver.name} size={52} />
           <div className="min-w-0 flex-1">
             <h2 className="truncate text-lg font-bold">{driver.name}</h2>
+            <p className="chip chip-ok w-fit">{t("role_driver")}</p>
             <p className="truncate text-sm text-ink/70" dir="ltr">{driver.vehicle} · {driver.plate}</p>
             <ClientStars rating={driver.clientRating} count={driver.clientRatings} />
           </div>

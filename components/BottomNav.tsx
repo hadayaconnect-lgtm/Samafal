@@ -51,10 +51,23 @@ export const NavIcons = {
 };
 
 /** Langue + déconnexion : contenu des onglets « Profil » et « Réglages ». */
-export function SettingsPanel() {
+export function SettingsPanel({ who }: { who?: { name: string | null; phone: string | null; email: string | null; role: string } }) {
   const { lang, setLang, t } = useT();
   return (
     <div className="grid gap-3">
+      {who && (
+        <div className="card flex items-center gap-3 p-4">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-green-soft text-lg font-bold text-green-dark" aria-hidden="true">
+            {(who.name ?? "?").trim().charAt(0).toUpperCase()}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-lg font-bold">{who.name ?? "—"}</p>
+            <p className="chip chip-ok w-fit">{who.role}</p>
+            {who.phone && <p className="truncate text-sm text-ink/70" dir="ltr">{who.phone}</p>}
+            {who.email && <p className="truncate text-sm text-ink/70" dir="ltr">{who.email}</p>}
+          </div>
+        </div>
+      )}
       <div className="card p-4">
         <label className="label" htmlFor="nav-lang">{t("language")}</label>
         <select id="nav-lang" className="field" value={lang} onChange={(e) => setLang(e.target.value as Lang)}>

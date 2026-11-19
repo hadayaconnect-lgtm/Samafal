@@ -234,6 +234,8 @@ export const ar: Partial<Record<Key, string>> = {
   arrived_sub: "سائقك ينتظرك: {vehicle} · {plate}",
   started_title: "الرحلة جارية",
   started_sub: "رحلة سعيدة مع {name}!",
+  role_client: "زبون",
+  role_driver: "سائق",
   nav_home: "الرئيسية",
   nav_history: "السجل",
   nav_profile: "حسابي",
