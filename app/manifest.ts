@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Le taxi le plus proche, en un instant.",
     start_url: "/",
     display: "standalone",
-    background_color: "#edf3f6",
-    theme_color: "#0d2b3e",
+    background_color: "#0f2d22",
+    theme_color: "#0f2d22",
     lang: "fr",
     icons: [
       { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
