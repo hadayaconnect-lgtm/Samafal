@@ -301,8 +301,8 @@ function CodeLogin({ mode, simple }: { mode: "phone" | "email"; simple?: boolean
                 setIsNew(v);
                 setError(null);
               }}
-              className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
-                isNew === v ? "bg-white text-green-dark shadow" : "text-ink/60"
+              className={`rounded-xl px-3 py-2.5 text-sm font-extrabold transition ${
+                isNew === v ? "bg-white text-green-dark shadow" : "text-ink"
               }`}
             >
               {t(v ? "auth_first_time" : "auth_have_account")}
