@@ -17,7 +17,7 @@ import { confirmPaid, patchDriver, registerDriver, setRideStatus } from "@/lib/s
 import { useAct, useApp } from "@/lib/useApp";
 import { useRideAlerts } from "@/lib/useRideAlerts";
 import { fmtNum } from "@/lib/pricing";
-import { ZONES, zoneCoords, type ZoneId } from "@/lib/zones";
+import { zoneCoords } from "@/lib/zones";
 import type { Driver, Ride } from "@/lib/types";
 
 const isToday = (ts: number) => new Date(ts).toDateString() === new Date().toDateString();
@@ -137,11 +137,6 @@ function Dashboard({ driver }: { driver: Driver }) {
     return () => navigator.geolocation.clearWatch(watch);
   }, [driver.id, tracking]);
 
-  function setZone(id: ZoneId) {
-    const c = zoneCoords(id);
-    act(patchDriver(driver.id, { lat: c.lat, lng: c.lng }));
-  }
-
   const toggleDisabled = !canWork || Boolean(active);
 
   const nav = (
@@ -175,15 +170,6 @@ function Dashboard({ driver }: { driver: Driver }) {
             <p className="truncate text-sm text-ink/70" dir="ltr">{driver.vehicle} · {driver.plate}</p>
             <ClientStars rating={driver.clientRating} count={driver.clientRatings} />
           </div>
-        </section>
-        <section className="card p-4">
-          <label className="label" htmlFor="zone">{t("my_zone")}</label>
-          <select id="zone" className="field" defaultValue="" onChange={(e) => e.target.value && setZone(e.target.value as ZoneId)}>
-            <option value="" />
-            {ZONES.map((z) => (
-              <option key={z.id} value={z.id}>{t(`zone_${z.id}`)}</option>
-            ))}
-          </select>
         </section>
         <SettingsPanel />
         {nav}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ComponentType } from "react";
 import { ChevronIcon, PinIcon, WheelIcon } from "@/components/Icons";
 import { LangSwitcher } from "@/components/TopBar";
@@ -51,6 +51,16 @@ function HomeScreen() {
   const [locked, setLocked] = useState<"client" | "driver" | null>(null);
   // Nom enregistré : affiché à la place de « Je suis chauffeur / client ».
   const [myName, setMyName] = useState<string | null>(null);
+  // Accès administrateur caché : 5 touches rapprochées sur « Powered by Hadaya Connect ».
+  const taps = useRef({ n: 0, t: 0 });
+  function secretTap() {
+    const now = Date.now();
+    taps.current = { n: now - taps.current.t > 3000 ? 1 : taps.current.n + 1, t: now };
+    if (taps.current.n >= 5) {
+      taps.current = { n: 0, t: 0 };
+      router.push("/admin");
+    }
+  }
   useEffect(() => {
     let remembered: string | null = null;
     let wantHome = false;
@@ -149,15 +159,9 @@ function HomeScreen() {
 
         <div className="mt-auto grid gap-3 pt-6 text-sm text-ink/70">
           <p>{t("live_note")}</p>
-          <p className="text-center text-xs text-ink/50">
+          <p className="select-none text-center text-xs text-ink/50" onClick={secretTap}>
             Powered by <span className="font-semibold text-ink/70">Hadaya Connect</span>
           </p>
-          {/* Petit accès administrateur : la session reste enregistrée, la porte suivante s'ouvre directement. */}
-          {!locked && (
-            <Link href="/admin" className="mx-auto w-fit rounded-full border border-line px-3 py-1 text-xs font-semibold text-ink/60 hover:text-ink">
-              {t("home_admin_btn")}
-            </Link>
-          )}
         </div>
       </main>
     </div>
