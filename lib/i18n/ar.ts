@@ -46,6 +46,7 @@ export const ar: Partial<Record<Key, string>> = {
   fixed_price: "السعر الثابت للرحلة",
   pay_method: "الدفع",
   pay_cash: "نقدًا",
+  pay_with: "الدفع عبر",
   pay_mobile: "الدفع عبر الهاتف",
   your_name: "اسمك",
   your_phone: "هاتفك",

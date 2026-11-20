@@ -3,6 +3,7 @@
 import { useId, useState, type ChangeEvent } from "react";
 import type { Key } from "@/lib/i18n";
 import type { NewDriver } from "@/lib/store";
+import { WALLET_OPERATORS } from "@/lib/pricing";
 import { useT } from "./LangProvider";
 
 const EMPTY: NewDriver = {
@@ -86,8 +87,9 @@ export function DriverForm({
         <div>
           <label className="label" htmlFor={`${uid}-op`}>{t("wallet_operator")}</label>
           <select id={`${uid}-op`} className="field" value={f.walletOperator} onChange={set("walletOperator")}>
-            <option>D-Money</option>
-            <option>Waafi</option>
+            {WALLET_OPERATORS.map((o) => (
+              <option key={o}>{o}</option>
+            ))}
           </select>
         </div>
         <div>

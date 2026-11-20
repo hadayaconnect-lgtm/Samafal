@@ -129,6 +129,7 @@ export const fr = {
   route_to_dest: "Itinéraire vers la destination",
   pay_method: "Paiement",
   pay_cash: "Espèces",
+  pay_with: "Payer avec",
   pay_mobile: "Mobile money",
   your_name: "Votre nom",
   your_phone: "Votre téléphone",

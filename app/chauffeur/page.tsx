@@ -77,7 +77,7 @@ function RideLine({ ride }: { ride: Ride }) {
       <span className="ms-auto text-base font-bold tabular-nums">
         {fmtNum(ride.price)} {t("currency")}
       </span>
-      <span className="chip w-full sm:w-auto">{t(ride.payment === "cash" ? "pay_cash" : "pay_mobile")}</span>
+      <span className="chip w-full sm:w-auto">{t(ride.payment === "cash" ? "pay_cash" : "pay_mobile")}{ride.payOperator ? ` · ${ride.payOperator}` : ""}</span>
       <span className="w-full text-xs text-ink/60">{t("offer_from_client")}</span>
     </p>
   );

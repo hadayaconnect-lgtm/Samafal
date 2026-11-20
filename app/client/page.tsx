@@ -18,7 +18,7 @@ import { useRideAlerts } from "@/lib/useRideAlerts";
 import { claimPaid, commentRide, rateRide, requestRide, setRideStatus } from "@/lib/store";
 import { nearestZone, zoneCoords, type ZoneId } from "@/lib/zones";
 import { etaMin, roadKm, type LatLng } from "@/lib/geo";
-import { DEFAULT_OFFER, fmtNum, MAX_OFFER, MIN_OFFER, OFFER_STEP } from "@/lib/pricing";
+import { DEFAULT_OFFER, fmtNum, MAX_OFFER, MIN_OFFER, OFFER_STEP, WALLET_OPERATORS } from "@/lib/pricing";
 import type { Driver, Payment, Ride } from "@/lib/types";
 
 const TaxiMap = dynamic(() => import("@/components/TaxiMap"), {
@@ -59,6 +59,7 @@ function Client({ me }: { me: Profile }) {
   const [placeError, setPlaceError] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [payment, setPayment] = useState<Payment>("cash");
+  const [payOperator, setPayOperator] = useState(WALLET_OPERATORS[0]);
   // Le client peut taper son prix librement ; la valeur envoyée reste bornée entre MIN_OFFER et MAX_OFFER.
   const [priceText, setPriceText] = useState(String(DEFAULT_OFFER));
   const typedPrice = parseInt(priceText.replace(/\D/g, ""), 10);
@@ -161,6 +162,7 @@ function Client({ me }: { me: Profile }) {
         pickupText: from,
         destText: to,
         payment,
+        payOperator,
         price,
       }).then(saveRideId),
     );
@@ -355,6 +357,16 @@ function Client({ me }: { me: Profile }) {
                         </button>
                       ))}
                     </div>
+                    {payment === "mobile" && (
+                      <div className="mt-2">
+                        <label className="label" htmlFor="pay-op">{t("pay_with")}</label>
+                        <select id="pay-op" className="field" value={payOperator} onChange={(e) => setPayOperator(e.target.value)}>
+                          {WALLET_OPERATORS.map((o) => (
+                            <option key={o}>{o}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </section>
 
                   {/* Avis et commentaires en bas : le prix proposé reste visible sans faire défiler. */}
@@ -489,7 +501,7 @@ function RidePanel({ ride, driver, onDone }: { ride: Ride; driver: Driver; onDon
           <p className="text-sm text-ink/70" dir="auto">{sub}</p>
         </div>
         {trip}
-        <p className="text-sm text-ink/70">{t(ride.payment === "cash" ? "pay_cash" : "pay_mobile")}</p>
+        <p className="text-sm text-ink/70">{t(ride.payment === "cash" ? "pay_cash" : "pay_mobile")}{ride.payOperator ? ` · ${ride.payOperator}` : ""}</p>
         {ride.status !== "started" && cancel}
       </div>
     );

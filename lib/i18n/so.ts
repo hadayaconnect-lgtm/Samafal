@@ -46,6 +46,7 @@ export const so: Partial<Record<Key, string>> = {
   fixed_price: "Qiimaha go'an ee safarka",
   pay_method: "Bixinta",
   pay_cash: "Lacag caddaan ah",
+  pay_with: "Ku bixi",
   pay_mobile: "Mobile money",
   your_name: "Magacaaga",
   your_phone: "Taleefankaaga",

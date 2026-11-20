@@ -42,6 +42,8 @@ export type Ride = {
   destText: string;
   price: number;
   payment: Payment;
+  /** Portefeuille choisi par le client pour payer en mobile money (null si espèces ou ancienne course). */
+  payOperator: string | null;
   payStatus: PayStatus;
   status: RideStatus;
   createdAt: number;
