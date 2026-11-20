@@ -44,6 +44,8 @@ export type Ride = {
   payment: Payment;
   /** Portefeuille choisi par le client pour payer en mobile money (null si espèces ou ancienne course). */
   payOperator: string | null;
+  /** Heure du rendez-vous si la course est planifiée à l'avance (null = course immédiate). */
+  scheduledAt: number | null;
   payStatus: PayStatus;
   status: RideStatus;
   createdAt: number;

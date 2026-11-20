@@ -16,7 +16,7 @@ import { signOut } from "@/lib/auth";
 import { confirmPaid, patchDriver, registerDriver, setRideStatus } from "@/lib/store";
 import { useAct, useApp } from "@/lib/useApp";
 import { useRideAlerts } from "@/lib/useRideAlerts";
-import { fmtNum } from "@/lib/pricing";
+import { fmtDateTime, fmtNum, PLAN_WINDOW_MS } from "@/lib/pricing";
 import { zoneCoords } from "@/lib/zones";
 import type { Driver, Ride } from "@/lib/types";
 
@@ -68,9 +68,12 @@ function Inner({ meId, name, phone }: { meId: string; name: string; phone: strin
 }
 
 function RideLine({ ride }: { ride: Ride }) {
-  const { t } = useT();
+  const { t, lang } = useT();
   return (
     <p className="flex flex-wrap items-center gap-x-2 rounded-2xl bg-mist p-3 text-sm">
+      {ride.scheduledAt !== null && (
+        <span className="w-full rounded-lg bg-taxi px-2 py-1 text-sm font-bold text-ink">{t("sched_for", { date: fmtDateTime(ride.scheduledAt, lang) })}</span>
+      )}
       <strong>{ride.pickupText || t(`zone_${ride.pickupZone}`)}</strong>
       <ChevronIcon className="h-4 w-4 text-ink/50 rtl:-scale-x-100" />
       <strong>{ride.destText || t(`zone_${ride.destZone}`)}</strong>
@@ -114,7 +117,15 @@ function Dashboard({ driver }: { driver: Driver }) {
   const canWork = driver.verified && !driver.suspended;
   const mine = app.rides.filter((r) => r.driverId === driver.id);
   const requests = mine.filter((r) => r.status === "requested");
-  const active = mine.find((r) => r.status === "accepted" || r.status === "arrived" || r.status === "started");
+  // Un rendez-vous accepté reste « planifié » jusqu'à une heure avant l'heure prévue.
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), 60000);
+    return () => clearInterval(id);
+  }, []);
+  const isPlanned = (r: Ride) => r.scheduledAt !== null && r.status === "accepted" && r.scheduledAt - nowMs >= PLAN_WINDOW_MS;
+  const planned = mine.filter(isPlanned).sort((a, b) => (a.scheduledAt ?? 0) - (b.scheduledAt ?? 0));
+  const active = mine.find((r) => (r.status === "accepted" || r.status === "arrived" || r.status === "started") && !isPlanned(r));
   const doneToday = mine.filter((r) => r.status === "completed" && isToday(r.updatedAt));
   const earnings = doneToday.reduce((sum, r) => sum + r.price, 0);
   const toConfirm = mine.filter((r) => r.status === "completed" && r.payment === "mobile" && r.payStatus !== "confirmed");
@@ -315,6 +326,21 @@ function Dashboard({ driver }: { driver: Driver }) {
           ))
         )}
       </section>
+
+      {planned.length > 0 && (
+        <section className="grid gap-2">
+          <h2 className="text-sm font-bold">{t("sched_title")}</h2>
+          {planned.map((r) => (
+            <div key={r.id} className="card grid gap-3 border-2 border-taxi p-4">
+              <p className="font-semibold">{r.clientName}</p>
+              <RideLine ride={r} />
+              <button type="button" className="btn btn-danger btn-sm" onClick={() => act(setRideStatus(r.id, "cancelled"))}>
+                {t("cancel_ride")}
+              </button>
+            </div>
+          ))}
+        </section>
+      )}
 
       {toConfirm.length > 0 && (
         <section className="grid gap-2">

@@ -76,6 +76,7 @@ function rebuild() {
     price: r.price as number,
     payment: r.payment as Payment,
     payOperator: (r.pay_operator as string | null) ?? null,
+    scheduledAt: r.scheduled_at ? new Date(r.scheduled_at as string).getTime() : null,
     payStatus: r.pay_status as PayStatus,
     status: r.status as RideStatus,
     createdAt: new Date(r.created_at as string).getTime(),
@@ -266,6 +267,7 @@ export async function requestRide(input: {
   destText: string;
   payment: Payment;
   payOperator?: string | null;
+  scheduledAt?: string | null;
   price: number;
 }): Promise<string> {
   const { data, error } = await supabase
@@ -280,6 +282,7 @@ export async function requestRide(input: {
       pickup_lng: input.pickup.lng,
       payment: input.payment,
       pay_operator: input.payment === "mobile" ? input.payOperator ?? null : null,
+      scheduled_at: input.scheduledAt ?? null,
       price: input.price,
     })
     .select("id")

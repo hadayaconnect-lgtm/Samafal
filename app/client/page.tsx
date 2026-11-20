@@ -18,7 +18,7 @@ import { useRideAlerts } from "@/lib/useRideAlerts";
 import { claimPaid, commentRide, rateRide, requestRide, setRideStatus } from "@/lib/store";
 import { nearestZone, zoneCoords, type ZoneId } from "@/lib/zones";
 import { etaMin, roadKm, type LatLng } from "@/lib/geo";
-import { DEFAULT_OFFER, fmtNum, MAX_OFFER, MIN_OFFER, OFFER_STEP, WALLET_OPERATORS } from "@/lib/pricing";
+import { DEFAULT_OFFER, fmtDateTime, fmtNum, MAX_OFFER, MIN_LEAD_MS, MIN_OFFER, OFFER_STEP, PLAN_WINDOW_MS, WALLET_OPERATORS } from "@/lib/pricing";
 import type { Driver, Payment, Ride } from "@/lib/types";
 
 const TaxiMap = dynamic(() => import("@/components/TaxiMap"), {
@@ -46,7 +46,7 @@ export default function ClientPage() {
 }
 
 function Client({ me }: { me: Profile }) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const app = useApp();
   const act = useAct();
   useRideAlerts("client");
@@ -60,6 +60,15 @@ function Client({ me }: { me: Profile }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [payment, setPayment] = useState<Payment>("cash");
   const [payOperator, setPayOperator] = useState(WALLET_OPERATORS[0]);
+  // Rendez-vous : « maintenant » ou une date et une heure choisies à l'avance.
+  const [when, setWhen] = useState<"now" | "later">("now");
+  const [whenText, setWhenText] = useState("");
+  const [whenError, setWhenError] = useState(false);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), 60000);
+    return () => clearInterval(id);
+  }, []);
   // Le client peut taper son prix librement ; la valeur envoyée reste bornée entre MIN_OFFER et MAX_OFFER.
   const [priceText, setPriceText] = useState(String(DEFAULT_OFFER));
   const typedPrice = parseInt(priceText.replace(/\D/g, ""), 10);
@@ -118,6 +127,18 @@ function Client({ me }: { me: Profile }) {
 
   const sel = nearby.find((n) => n.d.id === selectedId) ?? nearby[0];
 
+  // Un rendez-vous accepté devient « course en cours » une heure avant l'heure prévue.
+  const dueRide = app.rides.find(
+    (r) => r.scheduledAt !== null && ["accepted", "arrived", "started"].includes(r.status) && r.scheduledAt - nowMs < PLAN_WINDOW_MS,
+  );
+  useEffect(() => {
+    if (dueRide && !rideId) saveRideId(dueRide.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dueRide?.id]);
+  const planned = app.rides
+    .filter((r) => r.scheduledAt !== null && (r.status === "requested" || (r.status === "accepted" && r.id !== dueRide?.id)))
+    .sort((a, b) => (a.scheduledAt ?? 0) - (b.scheduledAt ?? 0));
+
   const ride = rideId ? app.rides.find((r) => r.id === rideId) : undefined;
   const rideActive = ride !== undefined && ride.status !== "cancelled";
   const rideDriver = ride ? app.drivers.find((d) => d.id === ride.driverId) : undefined;
@@ -153,6 +174,16 @@ function Client({ me }: { me: Profile }) {
       return;
     }
     setPlaceError(false);
+    let scheduledAt: string | null = null;
+    if (when === "later") {
+      const ms = new Date(whenText).getTime();
+      if (!Number.isFinite(ms) || ms < Date.now() + MIN_LEAD_MS) {
+        setWhenError(true);
+        return;
+      }
+      scheduledAt = new Date(ms).toISOString();
+    }
+    setWhenError(false);
     act(
       requestRide({
         driverId: sel.d.id,
@@ -163,8 +194,16 @@ function Client({ me }: { me: Profile }) {
         destText: to,
         payment,
         payOperator,
+        scheduledAt,
         price,
-      }).then(saveRideId),
+      }).then((id) => {
+        if (scheduledAt) {
+          // Rendez-vous planifié : il apparaît dans « Historique » ; l'accueil reste libre.
+          setWhen("now");
+          setWhenText("");
+          setTab("history");
+        } else saveRideId(id);
+      }),
     );
   }
 
@@ -205,8 +244,35 @@ function Client({ me }: { me: Profile }) {
           <RidePanel ride={ride} driver={rideDriver} onDone={() => saveRideId(null)} />
         ) : tab === "history" ? (
           <div className="grid gap-4 p-4">
+            <section className="grid gap-2" aria-label={t("sched_title")}>
+              <h2 className="text-lg font-bold">{t("sched_title")}</h2>
+              {planned.length === 0 ? (
+                <p className="rounded-2xl bg-mist p-3 text-sm text-ink/70">{t("sched_none")}</p>
+              ) : (
+                planned.map((r) => {
+                  const drv = app.drivers.find((d) => d.id === r.driverId);
+                  return (
+                    <div key={r.id} className="card grid gap-2 border-2 border-taxi p-3">
+                      <p className="font-bold">{t("sched_for", { date: fmtDateTime(r.scheduledAt ?? 0, lang) })}</p>
+                      <p className="text-sm">
+                        {r.pickupText || t(`zone_${r.pickupZone}`)} → {r.destText || t(`zone_${r.destZone}`)}
+                      </p>
+                      <p className="text-sm text-ink/70">
+                        {drv?.name} · {fmtNum(r.price)} {t("currency")}
+                      </p>
+                      <span className={`chip w-fit ${r.status === "accepted" ? "chip-ok" : "chip-warn"}`}>
+                        {t(r.status === "accepted" ? "sched_ok" : "sched_wait")}
+                      </span>
+                      <button type="button" className="btn btn-ghost btn-sm w-fit" onClick={() => act(setRideStatus(r.id, "cancelled"))}>
+                        {t("cancel_ride")}
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </section>
             <h2 className="text-lg font-bold">{t("history_title")}</h2>
-            <RideHistory rides={app.rides} mode="client" />
+            <RideHistory rides={app.rides.filter((r) => r.scheduledAt === null || !["requested", "accepted"].includes(r.status))} mode="client" />
           </div>
         ) : tab === "profile" ? (
           <div className="grid gap-4 p-4">
@@ -340,6 +406,38 @@ function Client({ me }: { me: Profile }) {
                     <p className="mt-2 text-center text-xs text-ink/60">{t("offer_hint")}</p>
                   </section>
 
+                  <section aria-label={t("when_label")}>
+                    <span className="label">{t("when_label")}</span>
+                    <div className="grid grid-cols-2 gap-2" role="group">
+                      {(["now", "later"] as const).map((w) => (
+                        <button
+                          key={w}
+                          type="button"
+                          aria-pressed={when === w}
+                          onClick={() => setWhen(w)}
+                          className={`btn btn-sm border ${
+                            when === w ? "border-green bg-green-soft font-extrabold text-green-dark ring-2 ring-green" : "border-line bg-white font-normal"
+                          }`}
+                        >
+                          {t(w === "now" ? "when_now" : "when_later")}
+                        </button>
+                      ))}
+                    </div>
+                    {when === "later" && (
+                      <div className="mt-2">
+                        <input
+                          type="datetime-local"
+                          className="field"
+                          aria-label={t("when_label")}
+                          value={whenText}
+                          min={new Date(nowMs + MIN_LEAD_MS - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
+                          onChange={(e) => setWhenText(e.target.value)}
+                        />
+                        {whenError && <p className="mt-1 text-sm text-bad">{t("sched_bad")}</p>}
+                      </div>
+                    )}
+                  </section>
+
                   <section aria-label={t("pay_method")}>
                     <span className="label">{t("pay_method")}</span>
                     <div className="grid grid-cols-2 gap-2" role="group">
@@ -382,7 +480,7 @@ function Client({ me }: { me: Profile }) {
                   <PhoneIcon className="h-5 w-5" />
                 </a>
                 <button type="button" className="btn btn-taxi flex-1 justify-between" onClick={reserve}>
-                  <span>{t("book")}</span>
+                  <span>{t(when === "later" ? "sched_book" : "book")}</span>
                   <span className="tabular-nums">{fmtNum(price)} {t("currency")}</span>
                 </button>
               </div>
