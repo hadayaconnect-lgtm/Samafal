@@ -26,6 +26,16 @@ const TaxiMap = dynamic(() => import("@/components/TaxiMap"), {
   loading: () => <div className="h-full w-full bg-mist" />,
 });
 
+type WhenParts = { y: number; m: number; d: number; h: number; mi: number };
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const daysIn = (y: number, m: number) => new Date(y, m, 0).getDate();
+/** Date proposée par défaut : dans deux heures, arrondie aux 5 minutes. */
+function defaultParts(base: number): WhenParts {
+  const x = new Date(base + 2 * 3600000);
+  x.setMinutes(Math.ceil(x.getMinutes() / 5) * 5, 0, 0);
+  return { y: x.getFullYear(), m: x.getMonth() + 1, d: x.getDate(), h: x.getHours(), mi: x.getMinutes() };
+}
+
 const tel = (p: string) => `tel:${p.replace(/\s/g, "")}`;
 const plain = (p: LatLng): LatLng => ({ lat: p.lat, lng: p.lng });
 
@@ -62,7 +72,8 @@ function Client({ me }: { me: Profile }) {
   const [payOperator, setPayOperator] = useState(WALLET_OPERATORS[0]);
   // Rendez-vous : « maintenant » ou une date et une heure choisies à l'avance.
   const [when, setWhen] = useState<"now" | "later">("now");
-  const [whenText, setWhenText] = useState("");
+  const [wp, setWp] = useState<WhenParts | null>(null);
+  const whenText = wp ? `${wp.y}-${pad2(wp.m)}-${pad2(Math.min(wp.d, daysIn(wp.y, wp.m)))}T${pad2(wp.h)}:${pad2(wp.mi)}` : "";
   const [whenError, setWhenError] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   useEffect(() => {
@@ -200,7 +211,7 @@ function Client({ me }: { me: Profile }) {
         if (scheduledAt) {
           // Rendez-vous planifié : il apparaît dans « Historique » ; l'accueil reste libre.
           setWhen("now");
-          setWhenText("");
+          setWp(null);
           setTab("history");
         } else saveRideId(id);
       }),
@@ -414,7 +425,10 @@ function Client({ me }: { me: Profile }) {
                           key={w}
                           type="button"
                           aria-pressed={when === w}
-                          onClick={() => setWhen(w)}
+                          onClick={() => {
+                            setWhen(w);
+                            if (w === "later") setWp((p) => p ?? defaultParts(Date.now()));
+                          }}
                           className={`btn btn-sm border ${
                             when === w ? "border-green bg-green-soft font-extrabold text-green-dark ring-2 ring-green" : "border-line bg-white font-normal"
                           }`}
@@ -425,14 +439,43 @@ function Client({ me }: { me: Profile }) {
                     </div>
                     {when === "later" && (
                       <div className="mt-2">
-                        <input
-                          type="datetime-local"
-                          className="field"
-                          aria-label={t("when_label")}
-                          value={whenText}
-                          min={new Date(nowMs + MIN_LEAD_MS - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
-                          onChange={(e) => setWhenText(e.target.value)}
-                        />
+                        {wp && (
+                          <div className="grid grid-cols-3 gap-2">
+                            {(
+                              [
+                                { k: "d", label: "when_day", opts: Array.from({ length: daysIn(wp.y, wp.m) }, (_, i) => ({ v: i + 1, l: pad2(i + 1) })) },
+                                {
+                                  k: "m",
+                                  label: "when_month",
+                                  opts: Array.from({ length: 12 }, (_, i) => ({
+                                    v: i + 1,
+                                    l: new Date(2000, i, 1).toLocaleDateString(lang === "ar" ? "ar" : "fr-FR", { month: "long" }),
+                                  })),
+                                },
+                                { k: "y", label: "when_year", opts: [0, 1].map((i) => ({ v: new Date().getFullYear() + i, l: String(new Date().getFullYear() + i) })) },
+                                { k: "h", label: "when_hour", opts: Array.from({ length: 24 }, (_, i) => ({ v: i, l: pad2(i) })) },
+                                { k: "mi", label: "when_minute", opts: Array.from({ length: 12 }, (_, i) => ({ v: i * 5, l: pad2(i * 5) })) },
+                              ] as const
+                            ).map((f) => (
+                              <div key={f.k}>
+                                <label className="mb-1 block text-sm font-extrabold" htmlFor={`when-${f.k}`}>{t(f.label)}</label>
+                                <select
+                                  id={`when-${f.k}`}
+                                  className="field font-bold"
+                                  value={wp[f.k]}
+                                  onChange={(e) => {
+                                    const v = Number(e.target.value);
+                                    setWp((p) => (p ? { ...p, [f.k]: v } : p));
+                                  }}
+                                >
+                                  {f.opts.map((o) => (
+                                    <option key={o.v} value={o.v}>{o.l}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                         {whenError && <p className="mt-1 text-sm text-bad">{t("sched_bad")}</p>}
                       </div>
                     )}
