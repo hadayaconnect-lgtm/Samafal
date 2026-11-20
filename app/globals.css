@@ -230,3 +230,26 @@ a:focus-visible {
 }
 .tb-zoom { animation: tb-zoom 1.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .tb-zoom { animation: none; } }
+
+/* Logo animé à l'ouverture */
+@keyframes tb-logo-in {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes tb-ring {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
+@keyframes tb-fade-in {
+  0%, 40% { opacity: 0; }
+  100% { opacity: 1; }
+}
+.tb-logo-in { animation: tb-logo-in 0.8s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+.tb-ring { animation: tb-ring 1.6s ease-out infinite; animation-delay: 0.5s; opacity: 0; }
+.tb-ring-2 { animation-delay: 1.1s; }
+.tb-fade-in { animation: tb-fade-in 1.2s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .tb-logo-in, .tb-ring, .tb-fade-in { animation: none; opacity: 1; }
+  .tb-ring { opacity: 0; }
+}

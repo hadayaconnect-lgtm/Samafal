@@ -47,6 +47,23 @@ function HomeScreen() {
   // Une personne déjà connectée retrouve directement son espace (client ou chauffeur).
   // Le bouton « retour » des pages ouvre l'accueil avec ?home=1 pour pouvoir le revoir.
   const [checking, setChecking] = useState(true);
+  // Le logo animé reste visible un court instant à l'ouverture de l'application (une fois par session).
+  const [introDone, setIntroDone] = useState(false);
+  useEffect(() => {
+    let seen = false;
+    try {
+      seen = sessionStorage.getItem("tb:intro") === "1";
+      sessionStorage.setItem("tb:intro", "1");
+    } catch {
+      /* stockage indisponible */
+    }
+    if (seen) {
+      setIntroDone(true);
+      return;
+    }
+    const id = setTimeout(() => setIntroDone(true), 1600);
+    return () => clearTimeout(id);
+  }, []);
   // Espace enregistré dans le compte (client ou chauffeur) : il est verrouillé, on ne propose que celui-là.
   const [locked, setLocked] = useState<"client" | "driver" | null>(null);
   // Nom enregistré : affiché à la place de « Je suis chauffeur / client ».
@@ -91,12 +108,16 @@ function HomeScreen() {
     });
   }, [router]);
 
-  if (checking)
+  if (checking || !introDone)
     return (
       <div className="relative grid min-h-dvh place-items-center bg-ink" aria-hidden="true">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/icon-192.png" alt="" width={96} height={96} className="rounded-3xl" />
-        <p className="absolute inset-x-0 bottom-10 text-center text-xs tracking-wide text-white/60">
+        <div className="relative grid place-items-center">
+          <span className="tb-ring absolute h-24 w-24 rounded-3xl border-2 border-taxi" />
+          <span className="tb-ring tb-ring-2 absolute h-24 w-24 rounded-3xl border-2 border-taxi" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icon-192.png" alt="" width={96} height={96} className="tb-logo-in relative rounded-3xl" />
+        </div>
+        <p className="tb-fade-in absolute inset-x-0 bottom-10 text-center text-xs tracking-wide text-white/60">
           Powered by <span className="font-semibold text-white/85">Hadaya Connect</span>
         </p>
       </div>
