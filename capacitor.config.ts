@@ -14,7 +14,8 @@ const config: CapacitorConfig = {
     cleartext: false,
     androidScheme: "https",
   },
-  android: { backgroundColor: "#0b2e22" },
+  // Le site reconnaît la version de la coque (TaxiBell/5) pour activer le son personnalisé.
+  android: { backgroundColor: "#0b2e22", appendUserAgent: "TaxiBell/5" },
   plugins: {
     LocalNotifications: {
       smallIcon: "ic_stat_taxibell",

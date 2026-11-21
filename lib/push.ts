@@ -6,7 +6,7 @@
  * et une fonction serveur envoie la notification à chaque demande ou changement de course.
  */
 import { supabase } from "./supabase";
-import { isNativeApp } from "./notify";
+import { channelId, channelSound, isNativeApp } from "./notify";
 
 const TOKEN_KEY = "tb:pushToken";
 let started = false;
@@ -28,12 +28,13 @@ export async function registerPush() {
       /* Firebase non configuré ou refusé : l'application continue sans push */
     });
     await PushNotifications.createChannel({
-      id: "taxibell-rides",
+      id: channelId(),
       name: "Courses TaxiBell",
       description: "Demandes de course et suivi de votre course",
       importance: 5,
       visibility: 1,
       vibration: true,
+      sound: channelSound(),
     });
     const perm = await PushNotifications.requestPermissions();
     if (perm.receive === "granted") await PushNotifications.register();

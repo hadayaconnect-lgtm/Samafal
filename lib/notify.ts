@@ -6,7 +6,15 @@
  */
 import { Capacitor } from "@capacitor/core";
 
-const CHANNEL = "taxibell-rides";
+/** Numéro de version de la coque Android (ajouté à l'agent utilisateur : « TaxiBell/5 »). 0 = ancienne version. */
+export const nativeBuild = () => {
+  if (typeof navigator === "undefined") return 0;
+  const m = /TaxiBell\/(\d+)/.exec(navigator.userAgent);
+  return m ? Number(m[1]) : 0;
+};
+/** Le son TaxiBell est dans l'application depuis la version 5 ; avant, on garde le canal d'origine (son du téléphone). */
+export const channelId = () => (nativeBuild() >= 5 ? "taxibell-rides-v2" : "taxibell-rides");
+export const channelSound = () => (nativeBuild() >= 5 ? "taxibell_ring.ogg" : undefined);
 let prepared = false;
 
 export const isNativeApp = () => typeof window !== "undefined" && Capacitor.isNativePlatform();
@@ -19,13 +27,13 @@ export async function prepareNotifications() {
     const { LocalNotifications } = await import("@capacitor/local-notifications");
     await LocalNotifications.requestPermissions();
     await LocalNotifications.createChannel({
-      id: CHANNEL,
+      id: channelId(),
       name: "Courses TaxiBell",
       description: "Demandes de course et suivi de votre course",
       importance: 5,
       visibility: 1,
       vibration: true,
-      sound: undefined,
+      sound: channelSound(),
     });
   } catch {
     /* notifications indisponibles */
@@ -70,7 +78,7 @@ export async function alertUser(title: string, body: string) {
   try {
     const { LocalNotifications } = await import("@capacitor/local-notifications");
     await LocalNotifications.schedule({
-      notifications: [{ id: counter++, title, body, channelId: CHANNEL, smallIcon: "ic_stat_taxibell" }],
+      notifications: [{ id: counter++, title, body, channelId: channelId(), smallIcon: "ic_stat_taxibell" }],
     });
   } catch {
     /* notification indisponible */
