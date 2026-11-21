@@ -139,6 +139,7 @@ export const fr = {
   when_later: "Planifier",
   sched_bad: "Choisissez une date au moins 30 minutes plus tard.",
   sched_book: "Planifier la course",
+  sending: "Envoi en cours…",
   sched_title: "Rendez-vous planifiés",
   sched_wait: "En attente du chauffeur",
   sched_ok: "Confirmé par le chauffeur",

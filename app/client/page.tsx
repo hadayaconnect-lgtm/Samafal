@@ -176,8 +176,10 @@ function Client({ me }: { me: Profile }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [booking, setBooking] = useState(false);
+
   function reserve() {
-    if (!sel) return;
+    if (!sel || booking) return;
     const from = pickupText.trim();
     const to = destText.trim();
     if (from.length < 2 || to.length < 2) {
@@ -195,6 +197,7 @@ function Client({ me }: { me: Profile }) {
       scheduledAt = new Date(ms).toISOString();
     }
     setWhenError(false);
+    setBooking(true);
     act(
       requestRide({
         driverId: sel.d.id,
@@ -214,7 +217,7 @@ function Client({ me }: { me: Profile }) {
           setWp(null);
           setTab("history");
         } else saveRideId(id);
-      }),
+      }).finally(() => setBooking(false)),
     );
   }
 
@@ -522,8 +525,8 @@ function Client({ me }: { me: Profile }) {
                 <a className="btn btn-ghost" href={tel(sel.d.phone)} aria-label={`${t("call")} ${sel.d.name}`}>
                   <PhoneIcon className="h-5 w-5" />
                 </a>
-                <button type="button" className="btn btn-taxi flex-1 justify-between" onClick={reserve}>
-                  <span>{t(when === "later" ? "sched_book" : "book")}</span>
+                <button type="button" className="btn btn-taxi flex-1 justify-between disabled:opacity-70" disabled={booking} onClick={reserve}>
+                  <span>{booking ? t("sending") : t(when === "later" ? "sched_book" : "book")}</span>
                   <span className="tabular-nums">{fmtNum(price)} {t("currency")}</span>
                 </button>
               </div>

@@ -56,6 +56,7 @@ export const ar: Partial<Record<Key, string>> = {
   when_later: "جدولة",
   sched_bad: "اختر موعداً بعد 30 دقيقة على الأقل.",
   sched_book: "جدولة الرحلة",
+  sending: "جارٍ الإرسال…",
   sched_title: "المواعيد المجدولة",
   sched_wait: "بانتظار السائق",
   sched_ok: "أكّده السائق",

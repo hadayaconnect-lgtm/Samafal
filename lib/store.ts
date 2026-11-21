@@ -288,7 +288,11 @@ export async function requestRide(input: {
     .select("id")
     .single();
   fail(error);
-  await refreshAll();
+  // Rapide : on ne recharge que les courses (1 requête) pour afficher la demande tout de suite ;
+  // le reste se met à jour en arrière-plan.
+  await loadRides();
+  rebuild();
+  void refreshAll();
   return data!.id as string;
 }
 

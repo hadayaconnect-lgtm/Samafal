@@ -56,6 +56,7 @@ export const so: Partial<Record<Key, string>> = {
   when_later: "Qorsheyso",
   sched_bad: "Dooro taariikh ugu yaraan 30 daqiiqo ka dambeeya.",
   sched_book: "Qorshee safarka",
+  sending: "Waa la diraa…",
   sched_title: "Ballamaha la qorsheeyay",
   sched_wait: "Waxaa la sugayaa darawalka",
   sched_ok: "Darawalku wuu xaqiijiyay",
