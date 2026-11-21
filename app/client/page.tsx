@@ -184,6 +184,12 @@ function Client({ me }: { me: Profile }) {
     const to = destText.trim();
     if (from.length < 2 || to.length < 2) {
       setPlaceError(true);
+      // Montre et active tout de suite le premier champ à remplir.
+      const el = document.getElementById(from.length < 2 ? "pickup" : "dest") as HTMLInputElement | null;
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.focus({ preventScroll: true });
+      }
       return;
     }
     setPlaceError(false);
@@ -302,7 +308,7 @@ function Client({ me }: { me: Profile }) {
                   <label htmlFor="pickup" className="w-24 shrink-0 text-sm font-semibold">{t("pickup")}</label>
                   <input
                     id="pickup"
-                    className="field"
+                    className={`field ${placeError && pickupText.trim().length < 2 ? "border-bad ring-2 ring-bad/30" : ""}`}
                     value={pickupText}
                     maxLength={80}
                     placeholder={t("place_pickup_ph")}
@@ -315,7 +321,7 @@ function Client({ me }: { me: Profile }) {
                   <label htmlFor="dest" className="w-24 shrink-0 text-sm font-semibold">{t("destination")}</label>
                   <input
                     id="dest"
-                    className="field"
+                    className={`field ${placeError && destText.trim().length < 2 ? "border-bad ring-2 ring-bad/30" : ""}`}
                     value={destText}
                     maxLength={80}
                     placeholder={t("place_dest_ph")}
@@ -526,8 +532,7 @@ function Client({ me }: { me: Profile }) {
                   <PhoneIcon className="h-5 w-5" />
                 </a>
                 <button type="button" className="btn btn-taxi flex-1 justify-between disabled:opacity-70" disabled={booking} onClick={reserve}>
-                  <span>{booking ? t("sending") : t(when === "later" ? "sched_book" : "book")}</span>
-                  <span className="tabular-nums">{fmtNum(price)} {t("currency")}</span>
+                  <span className="w-full text-center">{booking ? t("sending") : t(when === "later" ? "sched_book" : "book")}</span>
                 </button>
               </div>
             )}
